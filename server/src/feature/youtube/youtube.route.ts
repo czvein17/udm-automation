@@ -1,14 +1,25 @@
 import { Hono } from "hono";
-import type { ApiResponse } from "shared/dist";
-import { openYoutube } from "./youtube.handler";
+import { createTaskSchema, type ApiResponse } from "shared/dist";
+import {
+  createTask,
+  getTask,
+  openYoutube,
+  getTaskByRunID,
+} from "./youtube.handler";
+import { zValidator } from "@hono/zod-validator";
+import { zodThrow } from "../../middleware/zodThrow";
 
 export const youtubeRoute = new Hono()
   .post("/open", openYoutube)
-  .get("/", async (c) => {
-    const data: ApiResponse = {
-      message: "Hello YouTube!",
-      success: true,
-    };
+  .get("/task", getTask)
+  .get("/task/:runId", getTaskByRunID)
+  .post("/task", zodThrow(createTaskSchema, "json"), createTask);
+// .get("/", async (c) => {
+//   const data: ApiResponse<null> = {
+//     message: "Hello YouTube!",
+//     success: true,
+//     data: null,
+//   };
 
-    return c.json(data, { status: 200 });
-  });
+//   return c.json(data, { status: 200 });
+// });
