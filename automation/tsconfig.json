@@ -1,0 +1,24 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    // Node environment
+    "lib": ["ESNext"],
+    "types": ["node"],
+
+    // Output configuration
+    "declaration": true,
+    "noEmit": false,
+
+    // Type checking
+    "strict": true,
+    "skipLibCheck": true,
+
+    // Additional checks
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedIndexedAccess": true,
+
+    "ignoreDeprecations": "6.0"
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules", "dist"]
+}
