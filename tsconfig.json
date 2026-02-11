@@ -9,7 +9,7 @@
     "allowJs": true,
 
     // Path resolution
-    "baseUrl": "./",
+    // "baseUrl": "./",
     "paths": {
       "@server/*": ["./server/src/*"],
       "@client/*": ["./client/src/*"],
@@ -36,5 +36,19 @@
     "noUnusedLocals": false,
     "noUnusedParameters": false,
     "noPropertyAccessFromIndexSignature": false
-  }
+  },
+  "include": [
+    "server/src/**/*",
+    "client/src/**/*",
+    "shared/src/**/*",
+    "automation/src/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "server/dist",
+    "client/dist",
+    "shared/dist",
+    "dist",
+    "**/*.d.ts"
+  ]
 }
