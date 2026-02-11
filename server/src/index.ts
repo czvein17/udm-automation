@@ -5,6 +5,7 @@ import { serveStatic } from "hono/bun";
 import type { ApiResponse } from "shared/dist";
 import path from "node:path";
 import { appRouter } from "./app/router";
+import { errorMiddleware } from "./middleware/errorHandler";
 
 const BUN_ENV = process.env.NODE_ENV || "development";
 const clientDist = path.resolve(process.cwd(), "../client/dist");
@@ -16,13 +17,16 @@ const app = new Hono();
 app.use(cors());
 app.use(logger());
 
+app.onError(errorMiddleware);
+
 const api = app.basePath("/api/v1");
 
 api.route("/", appRouter);
 api.get("/hello", async (c) => {
-  const data: ApiResponse = {
+  const data: ApiResponse<null> = {
     message: "Hello BHVR!",
     success: true,
+    data: null,
   };
 
   return c.json(data, { status: 200 });
