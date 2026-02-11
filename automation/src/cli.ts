@@ -2,6 +2,8 @@ import dotenv from "dotenv";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { getTaskByRunId } from "server/dist/feature/youtube/youtube.service";
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const repoRoot = path.resolve(__dirname, "../../");
@@ -31,6 +33,14 @@ if (!jobId || !(jobId in jobRegistry)) {
 }
 
 async function main() {
+  const task = await getTaskByRunId(runId as string);
+  if (!task) {
+    console.error(`Task with runId ${runId} not found`);
+    process.exit(1);
+  }
+
+  console.log(task);
+
   await jobRegistry[jobId]();
 }
 
