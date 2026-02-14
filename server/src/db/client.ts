@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 const envUrl = process.env.LIBSQL_URL;
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const defaultDbPath = path.join(__dirname, "../../data/dev.db");
+const defaultDbPath = path.join(__dirname, "../../dev.db");
 const fileUrl = `file:${defaultDbPath}`;
 
 const client = createClient({
@@ -23,6 +23,14 @@ void (async () => {
         id TEXT PRIMARY KEY,
         runId TEXT NOT NULL,
         fieldName TEXT NOT NULL
+      );
+    `);
+    await (client as any).execute(`
+      CREATE TABLE IF NOT EXISTS task_logs (
+        id TEXT PRIMARY KEY,
+        taskId TEXT NOT NULL,
+        logs TEXT NOT NULL,
+        FOREIGN KEY (taskId) REFERENCES tasks(id)
       );
     `);
   } catch (e) {
