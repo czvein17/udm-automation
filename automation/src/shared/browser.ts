@@ -49,13 +49,6 @@ export async function launchBrowser(): Promise<{
     }
   }
 
-  console.log("LAUNCH_OPTS", {
-    headless: LaunchOptions.headless,
-    channel: (LaunchOptions as any).channel,
-    executablePath: (LaunchOptions as any).executablePath,
-    args: LaunchOptions.args,
-  });
-
   try {
     const browser = await chromium.launch(LaunchOptions);
 
