@@ -1,4 +1,6 @@
 import { Hono } from "hono";
-import { getRunById } from "./runs.handler";
+import { getAllRunByRunId, getRunById } from "./runs.handler";
 
-export const runsRoutes = new Hono().get("/:runId", getRunById);
+export const runsRoutes = new Hono()
+  .get("/", getAllRunByRunId)
+  .get("/:runId", getRunById);
