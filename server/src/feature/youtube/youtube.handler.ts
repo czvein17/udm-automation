@@ -10,8 +10,48 @@ import { startOpenYoutubeRun } from "./youtube.service";
 import * as ytService from "./youtube.service";
 
 export async function openYoutube(c: Context) {
-  const result = await startOpenYoutubeRun();
-  return c.json(result, { status: 200 });
+  const payload = await c.req.json();
+
+  const result: {
+    runId: string;
+  } = await startOpenYoutubeRun(payload);
+
+  const data: ApiResponse<{ runId: string }> = {
+    message: "YouTube run started successfully",
+    success: true,
+    data: result,
+  };
+
+  return c.json(data, { status: 200 });
+}
+
+export async function openYoutubeMultiple(c: Context) {
+  const payload = await c.req.json();
+
+  const results: {
+    runId: string;
+  } = await ytService.openYtTabsMultiple(payload);
+
+  const data: ApiResponse<{ runId: string }> = {
+    message: "YouTube multiple tabs run started successfully",
+    success: true,
+    data: results,
+  };
+
+  return c.json(data, { status: 200 });
+}
+
+export async function getTaskList(c: Context) {
+  const runId = c.req.param("runId");
+  const result: Task[] = await ytService.getTasksByRunId(runId);
+
+  const data: ApiResponse<Task[]> = {
+    message: "Tasks retrieved successfully",
+    success: true,
+    data: result,
+  };
+
+  return c.json(data, { status: 200 });
 }
 
 export async function getTask(c: Context) {
