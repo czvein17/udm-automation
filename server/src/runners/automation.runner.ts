@@ -44,6 +44,7 @@ export function runAutomationJob(args: { runId: string; jobId: string }) {
     // helpful fallback: try npm script if bunx not available
     if (err.code === "ENOENT") {
       appendLog(runId, "bunx not found; attempting npm run cli fallback");
+
       const fallback = spawn(`npm run cli -- ${jobId}`, {
         cwd: repoRoot,
         env: { ...process.env },
@@ -51,6 +52,7 @@ export function runAutomationJob(args: { runId: string; jobId: string }) {
         windowsHide: true,
         shell: true,
       });
+
       fallback.stdout.on("data", pump);
       fallback.stderr.on("data", pump);
       fallback.on("close", (code) => {
@@ -62,6 +64,7 @@ export function runAutomationJob(args: { runId: string; jobId: string }) {
           error: ok ? undefined : `Exit code ${code ?? -1}`,
         });
       });
+
       fallback.on("error", (e) =>
         finishRun(runId, {
           status: "FAILED",
