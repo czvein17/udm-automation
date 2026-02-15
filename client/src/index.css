@@ -1,4 +1,17 @@
 @import "tailwindcss";
+@import "@fontsource/inter/index.css";
+
+@theme {
+  --color-wtwPrimary: #48086f;
+  --color-wtwSecondary: #7f35b2;
+}
+
+@layer base {
+  body {
+    @apply font-sans antialiased;
+    font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+  }
+}
 
 @layer components {
   .sidebar-link {
@@ -7,5 +20,9 @@
 
   .sidebar-link-active {
     @apply text-black font-semibold px-3 py-2 rounded bg-gray-100;
+  }
+
+  .btn-primary {
+    @apply bg-wtwPrimary text-white py-2 px-5 rounded-lg hover:bg-wtwSecondary cursor-pointer;
   }
 }
