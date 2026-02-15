@@ -34,7 +34,7 @@ function RouteComponent() {
           onChange={(e) => setSearch(e.target.value)}
           className="bg-white outline"
         />
-        <button className="bg-blue-300" onClick={onSubmit}>
+        <button className="btn-primary" onClick={onSubmit}>
           submit
         </button>
       </div>
