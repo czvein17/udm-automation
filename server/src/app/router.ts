@@ -5,6 +5,7 @@ import { youtubeRoute } from "@server/feature/youtube/youtube.route";
 import { taskRoutes } from "@server/feature/task/task.route";
 
 export const appRouter = new Hono()
+  .get("/", (c) => c.json({ message: "Hello from the main app router!" }))
   .route("/youtube", youtubeRoute)
   .route("/runs", runsRoutes)
   .route("/tasks", taskRoutes);
