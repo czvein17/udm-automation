@@ -1,1 +1,11 @@
 @import "tailwindcss";
+
+@layer components {
+  .sidebar-link {
+    @apply text-gray-700 px-3 py-2 rounded hover:bg-gray-100;
+  }
+
+  .sidebar-link-active {
+    @apply text-black font-semibold px-3 py-2 rounded bg-gray-100;
+  }
+}
