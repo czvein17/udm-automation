@@ -15,7 +15,10 @@ export const AppShell = ({ children }: AppShellProps) => {
       }}
     >
       <Sidebar />
-      <main style={{ padding: 16, overflow: "auto" }} className="min-h-screen">
+      <main
+        style={{ padding: 16, overflow: "auto" }}
+        className="min-h-screen bg-[#f8fafc]"
+      >
         {children}
       </main>
     </div>

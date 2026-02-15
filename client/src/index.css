@@ -4,6 +4,9 @@
 @theme {
   --color-wtwPrimary: #48086f;
   --color-wtwSecondary: #7f35b2;
+
+  --color-bgPrimary: "#f8fafc";
+  --color-bgSecond: "#FFFFFF";
 }
 
 @layer base {
@@ -15,11 +18,11 @@
 
 @layer components {
   .sidebar-link {
-    @apply text-gray-700 px-3 py-2 rounded hover:bg-gray-100;
+    @apply text-gray-700 py-2 px-3 font-semibold rounded hover:bg-wtwSecondary/10 hover:text-wtwPrimary flex items-center gap-2 text-xs;
   }
 
   .sidebar-link-active {
-    @apply text-black font-semibold px-3 py-2 rounded bg-gray-100;
+    @apply text-wtwPrimary rounded;
   }
 
   .btn-primary {
