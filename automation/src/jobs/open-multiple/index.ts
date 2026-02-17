@@ -16,54 +16,69 @@ export async function runMultipleYtTabs(runId: string) {
 
   const { browser, context, storageStatePath } = await launchBrowser();
 
-  for (const task of taskList) {
-    console.log(task);
+  const BATCH_SIZE = 3;
+  for (let i = 0; i < taskList.length; i += BATCH_SIZE) {
+    const chunk = taskList.slice(i, i + BATCH_SIZE);
 
-    const page = await context.newPage();
-    try {
-      await TaskService.createTaskLogs({
-        taskId: task.id,
-        logs: [{ status: "loading", action: "navigate to youtube" }],
-      });
+    // run up to BATCH_SIZE pages in parallel, await the whole batch
+    await Promise.all(
+      chunk.map(async (task) => {
+        const page = await context.newPage();
+        try {
+          // bring the new tab to front so it renders before/while we interact
+          await page.bringToFront();
 
-      await page.goto("https://youtube.com", {
-        waitUntil: "domcontentloaded",
-      });
+          await TaskService.createTaskLogs({
+            taskId: task.id,
+            logs: [{ status: "loading", action: "navigate to youtube" }],
+          });
 
-      await TaskService.createTaskLogs({
-        taskId: task.id,
-        logs: [{ status: "success", action: "navigated to youtube" }],
-      });
+          await page.goto("https://youtube.com", {
+            waitUntil: "domcontentloaded",
+          });
 
-      await TaskService.createTaskLogs({
-        taskId: task.id,
-        logs: [{ status: "loading", action: "fill search" }],
-      });
+          // ensure the tab is visible and give the renderer a short moment
+          await page.bringToFront();
+          await page.waitForTimeout(300);
 
-      await page.fill(YT_SEL.SEARCH_BAR, task.fieldName);
+          await TaskService.createTaskLogs({
+            taskId: task.id,
+            logs: [{ status: "success", action: "navigated to youtube" }],
+          });
 
-      await TaskService.createTaskLogs({
-        taskId: task.id,
-        logs: [{ status: "success", action: "filled search" }],
-      });
+          await TaskService.createTaskLogs({
+            taskId: task.id,
+            logs: [{ status: "loading", action: "fill search" }],
+          });
 
-      await TaskService.createTaskLogs({
-        taskId: task.id,
-        logs: [{ status: "loading", action: "press enter" }],
-      });
+          await page.fill(YT_SEL.SEARCH_BAR, task.fieldName);
 
-      await page.press(YT_SEL.SEARCH_BAR, "Enter");
+          await TaskService.createTaskLogs({
+            taskId: task.id,
+            logs: [{ status: "success", action: "filled search" }],
+          });
 
-      await TaskService.createTaskLogs({
-        taskId: task.id,
-        logs: [{ status: "success", action: "search submitted" }],
-      });
-    } catch (err: any) {
-      console.error("Task step error", err);
-      await TaskService.createTaskLogs({
-        taskId: task.id,
-        logs: [{ status: "failed", action: `error: ${err?.message ?? err}` }],
-      });
-    }
+          await TaskService.createTaskLogs({
+            taskId: task.id,
+            logs: [{ status: "loading", action: "press enter" }],
+          });
+
+          await page.press(YT_SEL.SEARCH_BAR, "Enter");
+
+          await TaskService.createTaskLogs({
+            taskId: task.id,
+            logs: [{ status: "success", action: "search submitted" }],
+          });
+        } catch (err: any) {
+          console.error("Task step error", err);
+          await TaskService.createTaskLogs({
+            taskId: task.id,
+            logs: [
+              { status: "failed", action: `error: ${err?.message ?? err}` },
+            ],
+          });
+        }
+      }),
+    );
   }
 }
