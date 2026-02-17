@@ -1,7 +1,7 @@
 import type { ColumnDef } from "@tanstack/react-table";
-import type { ElementRow } from "./elements.types";
-import { EditableTextCell } from "./components/EditableTextCells";
-import { type RowFieldErrors } from "./elements.error";
+import type { ElementRow } from "../types/elements.types";
+import { EditableTextCell } from "./EditableTextCells";
+import { type RowFieldErrors } from "../utils/elements.error";
 import type { TableMeta } from "@tanstack/react-table";
 import { Trash2 } from "lucide-react";
 type ElementsTableMeta = TableMeta<ElementRow> & {

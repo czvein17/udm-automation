@@ -1,4 +1,4 @@
-import type { ElementRow } from "./elements.types";
+import type { ElementRow } from "../types/elements.types";
 
 export function makeEmptyRow(id: number): ElementRow {
   return {

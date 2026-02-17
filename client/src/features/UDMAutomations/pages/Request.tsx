@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ElementsPage as ElementComponent } from "./elements/ElementsPage";
+import { ElementsTab } from "../components/ElementsTab";
 
 export const Request = () => {
   const [activeTab, setActiveTab] = useState<string>("Elements");
@@ -37,7 +37,7 @@ export const Request = () => {
         {/* Only THIS inner wrapper scrolls per tab */}
         {activeTab === "Elements" && (
           <div className="h-full min-h-0 bg-[#f8fafc] p-2">
-            <ElementComponent />
+            <ElementsTab />
           </div>
         )}
 

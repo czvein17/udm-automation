@@ -8,7 +8,7 @@ import {
   useState,
 } from "react";
 import type { Table, Row, Column } from "@tanstack/react-table";
-import type { ElementRow } from "../elements.types";
+import type { ElementRow } from "../types/elements.types";
 
 type UpdateDataFn = (rowIndex: number, columnId: string, value: string) => void;
 
@@ -130,9 +130,9 @@ export function EditableTextCellInner({
           "w-full bg-[#f8fafc] outline-none font-medium",
           "px-2 py-1 rounded",
           "text-[11px] text-slate-600",
-          "ring-1 ring-slate-300",
+          "ring-1",
+          error ? "ring-red-400" : "ring-slate-300",
           "focus:ring-wtwSecondary",
-          error ? "ring-red-400" : "",
         ].join(" ")}
         required={required}
       />

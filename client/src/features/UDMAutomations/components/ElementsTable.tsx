@@ -1,5 +1,5 @@
 import { flexRender, type Table } from "@tanstack/react-table";
-import type { ElementRow } from "../elements.types";
+import type { ElementRow } from "../../types/elements.types";
 
 type Props = {
   table: Table<ElementRow>;
@@ -46,9 +46,10 @@ export function ElementsTable({ table }: Props) {
                   const isFirstCol = colIndex === 0;
                   const isLastCol = colIndex === cells.length - 1;
                   const cls = [
-                    "px-2 py-2 align-middle",
+                    "px-2 py-2 ",
                     isFirstCol ? "pl-4 cursor-pointer" : "",
-                    isLastCol ? "pr-6" : "",
+                    isLastCol ? "pr-6 py-3" : "",
+                    "align-top",
                   ]
                     .filter(Boolean)
                     .join(" ");
