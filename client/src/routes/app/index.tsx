@@ -1,42 +1,18 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+
+import { Request } from "../../components/UDMAutomation/Request";
 
 export const Route = createFileRoute("/app/")({
   component: RouteComponent,
 });
 
 function RouteComponent() {
-  const [search, setSearch] = useState<string>("");
-
-  const onSubmit = async () => {
-    console.log("submitted");
-
-    try {
-      const res = await fetch("/api/v1/youtube/open", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ fieldName: search }),
-      });
-      const data = await res.json();
-      console.log(data);
-    } catch (error) {
-      console.log(error);
-    }
-  };
-
   return (
-    <div className="flex flex-col justify-center items-center h-full">
-      Hello "/app/"!
-      <div className="mt-4 flex flex-col gap-2">
-        <input
-          type="text"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="bg-white outline"
-        />
-        <button className="btn-primary" onClick={onSubmit}>
-          submit
-        </button>
+    <div className="p-8">
+      <div className="grid grid-cols-2 grid-rows-[auto_1fr] gap-6 max-w-8xl mx-auto h-[calc(100vh-160px)]">
+        <div className="col-span-2 card h-24">First: spans two columns</div>
+        <Request />
+        <div className="card overflow-auto">Third</div>
       </div>
     </div>
   );
