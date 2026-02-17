@@ -71,7 +71,7 @@ export function EditableTextCellInner({
   }, []);
 
   const onKeyDown: KeyboardEventHandler<HTMLInputElement> = useCallback(
-    (e) => {
+    (e: React.KeyboardEvent<HTMLInputElement>) => {
       const idx = cols.indexOf(String(column.id));
 
       switch (e.key) {
@@ -105,6 +105,16 @@ export function EditableTextCellInner({
     [cols, column.id, focusCell, trimmed, row.index, updateData],
   );
 
+  const onChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => setLocal(e.target.value),
+    [],
+  );
+
+  const onBlur = useCallback(
+    () => updateData?.(row.index, column.id as string, trimmed),
+    [updateData, row.index, column.id, trimmed],
+  );
+
   return (
     <div className="w-full">
       <input
@@ -113,11 +123,8 @@ export function EditableTextCellInner({
         data-col={String(column.id)}
         value={local}
         placeholder={placeholder}
-        onChange={useCallback((e) => setLocal(e.target.value), [])}
-        onBlur={useCallback(
-          () => updateData?.(row.index, column.id as string, trimmed),
-          [updateData, row.index, column.id, trimmed],
-        )}
+        onChange={onChange}
+        onBlur={onBlur}
         onKeyDown={onKeyDown}
         className={[
           "w-full bg-[#f8fafc] outline-none font-medium",
