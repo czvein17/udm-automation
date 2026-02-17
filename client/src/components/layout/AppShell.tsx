@@ -7,20 +7,9 @@ type AppShellProps = {
 
 export const AppShell = ({ children }: AppShellProps) => {
   return (
-    <div
-      style={{
-        display: "grid",
-        gridTemplateColumns: "260px 1fr",
-        height: "100vh",
-      }}
-    >
+    <div className="grid grid-cols-[260px_1fr] h-screen">
       <Sidebar />
-      <main
-        style={{ padding: 16, overflow: "auto" }}
-        className="min-h-screen bg-[#f8fafc]"
-      >
-        {children}
-      </main>
+      <main className="bg-[#f8fafc] overflow-auto p-4">{children}</main>
     </div>
   );
 };
