@@ -1,5 +1,5 @@
 import { flexRender, type Table } from "@tanstack/react-table";
-import type { ElementRow } from "../../types/elements.types";
+import { type ElementRow } from "../types/elements.types";
 
 type Props = {
   table: Table<ElementRow>;
