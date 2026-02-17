@@ -14,18 +14,26 @@
     @apply font-sans antialiased;
     font-family: Inter, ui-sans-serif, system-ui, sans-serif;
   }
+
+  input[type="checkbox"] {
+    @apply accent-wtwSecondary cursor-pointer;
+  }
 }
 
 @layer components {
   .sidebar-link {
-    @apply text-gray-700 py-2 px-3 font-semibold rounded hover:bg-wtwSecondary/10 hover:text-wtwPrimary flex items-center gap-2 text-xs;
+    @apply text-slate-500 py-3 px-4 font-medium rounded hover:bg-wtwSecondary/10 hover:text-wtwPrimary flex items-center gap-2 text-sm transition-all;
   }
 
   .sidebar-link-active {
-    @apply text-wtwPrimary rounded;
+    @apply text-wtwPrimary rounded font-semibold;
   }
 
   .btn-primary {
     @apply bg-wtwPrimary text-white py-2 px-5 rounded-lg hover:bg-wtwSecondary cursor-pointer;
+  }
+
+  .card {
+    @apply bg-white rounded-2xl border border-slate-200 shadow-sm h-full;
   }
 }
