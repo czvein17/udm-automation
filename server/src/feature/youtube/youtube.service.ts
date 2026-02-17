@@ -44,7 +44,7 @@ export async function openYtTabsMultiple(
 
   await YTRepo.createTaskMultiple(newTasks);
 
-  // runAutomationJob({ runId, jobId });
+  runAutomationJob({ runId, jobId });
 
   return { runId };
 }
