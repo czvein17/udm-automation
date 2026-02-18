@@ -17,6 +17,7 @@ import {
   type ElementsTableMeta as HookMeta,
 } from "../hooks/useElementsTableMeta";
 import { useElementServices } from "../hooks/useElementsServices";
+import { parsePastedClipboard } from "../utils/clipboard.util";
 
 type ElementsTableMeta = HookMeta;
 
@@ -189,132 +190,21 @@ export function ElementsTab() {
       const text = await navigator.clipboard.readText();
       if (!text) return;
 
-      const rows = text
-        .trim()
-        .split(/\r?\n/)
-        .map((r) => r.split(/\t|,/));
-      if (rows.length === 0) return;
-
-      const first = rows[0];
-      const isHeader = first.some(
-        (c) => /[a-zA-Z]/.test(String(c)) && !/^\d+$/.test(String(c)),
+      const { mapped, firstEmptyRowIndex } = parsePastedClipboard(
+        text,
+        data,
+        HEADER_ALIASES,
       );
 
-      const example = data.length ? data[0] : makeEmptyRow(1);
-      const fieldNames = Object.keys(example);
-      const normalize = (s: string) =>
-        String(s)
-          .replace(/[^a-z0-9]/gi, "")
-          .toLowerCase();
-
-      // helper: detect a fully-empty row (excluding `id`)
-      const isEmptyRow = (row: ElementRow) => {
-        const isEmpty = (v?: string) => !v || String(v).trim() === "";
-        return (
-          isEmpty(row.fieldName) &&
-          isEmpty(row.elementId) &&
-          isEmpty(row.tableName) &&
-          isEmpty(row.elementName) &&
-          isEmpty(row.displayName)
-        );
-      };
-
-      // if there's an initial empty row, prefer inserting at that index
-      const firstEmptyRowIndex = data.findIndex(isEmptyRow);
-
-      const headerToField: Record<string, string | null> = {};
-      if (isHeader) {
-        // treat first row as header
-        const headers = first as string[];
-        const normHeaders = headers.map((h) => normalize(h));
-        for (let i = 0; i < headers.length; i++) {
-          const h = headers[i];
-          const hn = normHeaders[i];
-          const alias = HEADER_ALIASES[hn];
-          if (alias !== undefined) {
-            headerToField[h] = alias;
-            continue;
-          }
-          const nf = fieldNames.find((f) => normalize(f) === hn);
-          headerToField[h] = nf ?? null;
-        }
-
-        // data rows start at 1
-        const dataRows = rows.slice(1);
-
-        // choose starting id: use empty-row id if found, otherwise append ids
-        let nextId =
-          firstEmptyRowIndex >= 0
-            ? data[firstEmptyRowIndex].id
-            : data.length
-              ? data[data.length - 1].id + 1
-              : 1;
-
-        const mapped = dataRows.map((cols) => {
-          const base = makeEmptyRow(nextId++);
-          for (let i = 0; i < cols.length; i++) {
-            const h = headers[i];
-            const field = headerToField[h];
-            if (!field) continue;
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            (base as any)[field] = cols[i];
-          }
-          return base as ElementRow;
-        });
-
-        const parsed = elementRowsSchema.safeParse(mapped);
-        if (!parsed.success) {
-          setErrors(zodErrorToRowFieldErrors(parsed.error));
-          return;
-        }
-        setErrors({});
-
-        setData((prev) => {
-          if (firstEmptyRowIndex >= 0) {
-            return [
-              ...prev.slice(0, firstEmptyRowIndex),
-              ...parsed.data,
-              ...prev.slice(firstEmptyRowIndex + 1),
-            ];
-          }
-          return [...prev, ...parsed.data];
-        });
-        return;
-      }
-
-      // No header: map by column count to default order
-      const defaultOrder = [
-        "fieldName",
-        "elementId",
-        "tableName",
-        "elementName",
-        "displayName",
-      ];
-
-      let nextId =
-        firstEmptyRowIndex >= 0
-          ? data[firstEmptyRowIndex].id
-          : data.length
-            ? data[data.length - 1].id + 1
-            : 1;
-
-      const mapped = rows.map((cols) => {
-        const base = makeEmptyRow(nextId++);
-        for (let i = 0; i < Math.min(cols.length, defaultOrder.length); i++) {
-          const field = defaultOrder[i];
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          (base as any)[field] = cols[i];
-        }
-        return base as ElementRow;
-      });
+      if (mapped.length === 0) return;
 
       const parsed = elementRowsSchema.safeParse(mapped);
       if (!parsed.success) {
         setErrors(zodErrorToRowFieldErrors(parsed.error));
         return;
       }
-      setErrors({});
 
+      setErrors({});
       setData((prev) => {
         if (firstEmptyRowIndex >= 0) {
           return [
