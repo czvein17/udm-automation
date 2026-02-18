@@ -1,16 +1,9 @@
-import {
-  runInfo,
-  stepInfo,
-  actionInfo,
-  checkInfo,
-  err,
-} from "../../shared/logger";
 import { launchBrowser } from "../../shared/browser";
 import YT_SEL from "../../selectors/youtube-selector";
 import { getTaskByRunId } from "server/dist/feature/youtube/youtube.service";
 
 export async function runOpenYoutube(runId: string) {
-  console.log("Running Open YouTube job with runId:", runId);
+  console.log("[JOB open-youtube] start", { runId });
   // runInfo("RUN_START: Open YouTube", { jobId: "open-youtube", runId });
 
   console.log("Getting task for runId:", runId);
