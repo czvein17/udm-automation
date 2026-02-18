@@ -120,3 +120,11 @@ export const upsertTaskLogs = async (data: TaskLog) => {
 export const deleteTaskLogs = async (id: string): Promise<void> => {
   await db.delete(taskLogs).where(eq(taskLogs.id, id));
 };
+
+export const deleteAllTask = async () => {
+  return await db.delete(tasks);
+};
+
+export const deleteAllTaskLogs = async () => {
+  return await db.delete(taskLogs);
+};
