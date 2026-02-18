@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useRef } from "react";
 import { getCoreRowModel, useReactTable } from "@tanstack/react-table";
 
 import { elementRowsSchema } from "shared/dist/schema/elements.schema";
@@ -20,7 +20,32 @@ import { useElementServices } from "../hooks/useElementsServices";
 
 type ElementsTableMeta = HookMeta;
 
+// Known header aliases to map common Excel column names to ElementRow keys.
+const HEADER_ALIASES: Record<
+  string,
+  keyof import("../types/elements.types").ElementRow | null
+> = {
+  // main fields
+  fieldname: "fieldName",
+  "field name": "fieldName",
+  elementid: "elementId",
+  "element id": "elementId",
+  tablename: "tableName",
+  "table name": "tableName",
+  elementname: "elementName",
+  "element name": "elementName",
+  displayname: "displayName",
+  "display name": "displayName",
+
+  // known extras we currently ignore
+  applicabilitiestag: null,
+  stat: null,
+  status: null,
+};
+
 export function ElementsTab() {
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
   const [data, setData] = useState<ElementRow[]>(initialRows);
   const [selectedRows, setSelectedRows] = useState<Set<number>>(new Set());
 
@@ -73,6 +98,238 @@ export function ElementsTab() {
     submitElementsList(parsed.data);
   };
 
+  async function handleFileInputChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const arrayBuffer = await file.arrayBuffer();
+
+      // dynamic import so the client bundle doesn't always include xlsx
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const XLSX = (await import("xlsx")) as any;
+
+      const workbook = XLSX.read(arrayBuffer, { type: "array" });
+      const sheetName = workbook.SheetNames[0];
+      const sheet = workbook.Sheets[sheetName];
+      const raw: Record<string, unknown>[] = XLSX.utils.sheet_to_json(sheet, {
+        defval: null,
+      });
+
+      // heuristics to map incoming headers to our row fields
+      const example = data.length ? data[0] : makeEmptyRow(1);
+      const fieldNames = Object.keys(example);
+      const normalize = (s: string) =>
+        s.replace(/[^a-z0-9]/gi, "").toLowerCase();
+      const normFields = fieldNames.map((f) => ({ f, n: normalize(f) }));
+
+      const headers = raw.length ? Object.keys(raw[0]) : [];
+      const headerToField: Record<string, string | null> = {};
+
+      for (const h of headers) {
+        const hn = normalize(h);
+
+        // 0) explicit alias map
+        const alias = HEADER_ALIASES[hn];
+        if (alias !== undefined) {
+          headerToField[h] = alias;
+          continue;
+        }
+
+        const exact = fieldNames.find((f) => f === h);
+        if (exact) {
+          headerToField[h] = exact;
+          continue;
+        }
+        const ci = fieldNames.find((f) => f.toLowerCase() === h.toLowerCase());
+        if (ci) {
+          headerToField[h] = ci;
+          continue;
+        }
+        const nf = normFields.find((x) => x.n === hn);
+        if (nf) {
+          headerToField[h] = nf.f;
+          continue;
+        }
+        const sub = fieldNames.find(
+          (f) => normalize(f).includes(hn) || hn.includes(normalize(f)),
+        );
+        headerToField[h] = sub ?? null;
+      }
+
+      let nextId = data.length ? data[data.length - 1].id + 1 : 1;
+      const mapped = raw.map((r) => {
+        const base = makeEmptyRow(nextId++);
+        for (const key of Object.keys(r)) {
+          const field = headerToField[key];
+          if (!field) continue;
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (base as any)[field] = r[key] as any;
+        }
+        return base as ElementRow;
+      });
+
+      const parsed = elementRowsSchema.safeParse(mapped);
+      if (!parsed.success) {
+        setErrors(zodErrorToRowFieldErrors(parsed.error));
+        return;
+      }
+
+      setErrors({});
+      setData((prev) => [...prev, ...parsed.data]);
+    } catch (err) {
+      console.error("Failed to import spreadsheet", err);
+    } finally {
+      // clear the input so selecting the same file again triggers onChange
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  }
+
+  async function handlePasteClipboard() {
+    try {
+      const text = await navigator.clipboard.readText();
+      if (!text) return;
+
+      const rows = text
+        .trim()
+        .split(/\r?\n/)
+        .map((r) => r.split(/\t|,/));
+      if (rows.length === 0) return;
+
+      const first = rows[0];
+      const isHeader = first.some(
+        (c) => /[a-zA-Z]/.test(String(c)) && !/^\d+$/.test(String(c)),
+      );
+
+      const example = data.length ? data[0] : makeEmptyRow(1);
+      const fieldNames = Object.keys(example);
+      const normalize = (s: string) =>
+        String(s)
+          .replace(/[^a-z0-9]/gi, "")
+          .toLowerCase();
+
+      // helper: detect a fully-empty row (excluding `id`)
+      const isEmptyRow = (row: ElementRow) => {
+        const isEmpty = (v?: string) => !v || String(v).trim() === "";
+        return (
+          isEmpty(row.fieldName) &&
+          isEmpty(row.elementId) &&
+          isEmpty(row.tableName) &&
+          isEmpty(row.elementName) &&
+          isEmpty(row.displayName)
+        );
+      };
+
+      // if there's an initial empty row, prefer inserting at that index
+      const firstEmptyRowIndex = data.findIndex(isEmptyRow);
+
+      const headerToField: Record<string, string | null> = {};
+      if (isHeader) {
+        // treat first row as header
+        const headers = first as string[];
+        const normHeaders = headers.map((h) => normalize(h));
+        for (let i = 0; i < headers.length; i++) {
+          const h = headers[i];
+          const hn = normHeaders[i];
+          const alias = HEADER_ALIASES[hn];
+          if (alias !== undefined) {
+            headerToField[h] = alias;
+            continue;
+          }
+          const nf = fieldNames.find((f) => normalize(f) === hn);
+          headerToField[h] = nf ?? null;
+        }
+
+        // data rows start at 1
+        const dataRows = rows.slice(1);
+
+        // choose starting id: use empty-row id if found, otherwise append ids
+        let nextId =
+          firstEmptyRowIndex >= 0
+            ? data[firstEmptyRowIndex].id
+            : data.length
+              ? data[data.length - 1].id + 1
+              : 1;
+
+        const mapped = dataRows.map((cols) => {
+          const base = makeEmptyRow(nextId++);
+          for (let i = 0; i < cols.length; i++) {
+            const h = headers[i];
+            const field = headerToField[h];
+            if (!field) continue;
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (base as any)[field] = cols[i];
+          }
+          return base as ElementRow;
+        });
+
+        const parsed = elementRowsSchema.safeParse(mapped);
+        if (!parsed.success) {
+          setErrors(zodErrorToRowFieldErrors(parsed.error));
+          return;
+        }
+        setErrors({});
+
+        setData((prev) => {
+          if (firstEmptyRowIndex >= 0) {
+            return [
+              ...prev.slice(0, firstEmptyRowIndex),
+              ...parsed.data,
+              ...prev.slice(firstEmptyRowIndex + 1),
+            ];
+          }
+          return [...prev, ...parsed.data];
+        });
+        return;
+      }
+
+      // No header: map by column count to default order
+      const defaultOrder = [
+        "fieldName",
+        "elementId",
+        "tableName",
+        "elementName",
+        "displayName",
+      ];
+
+      let nextId =
+        firstEmptyRowIndex >= 0
+          ? data[firstEmptyRowIndex].id
+          : data.length
+            ? data[data.length - 1].id + 1
+            : 1;
+
+      const mapped = rows.map((cols) => {
+        const base = makeEmptyRow(nextId++);
+        for (let i = 0; i < Math.min(cols.length, defaultOrder.length); i++) {
+          const field = defaultOrder[i];
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (base as any)[field] = cols[i];
+        }
+        return base as ElementRow;
+      });
+
+      const parsed = elementRowsSchema.safeParse(mapped);
+      if (!parsed.success) {
+        setErrors(zodErrorToRowFieldErrors(parsed.error));
+        return;
+      }
+      setErrors({});
+
+      setData((prev) => {
+        if (firstEmptyRowIndex >= 0) {
+          return [
+            ...prev.slice(0, firstEmptyRowIndex),
+            ...parsed.data,
+            ...prev.slice(firstEmptyRowIndex + 1),
+          ];
+        }
+        return [...prev, ...parsed.data];
+      });
+    } catch (err) {
+      console.error("Failed to paste data", err);
+    }
+  }
+
   return (
     <div className="h-full min-h-0 flex flex-col gap-2">
       {/* Table */}
@@ -84,7 +341,31 @@ export function ElementsTab() {
           <span className="font-semibold text-slate-700">{data.length}</span>
         </div>
 
-        <div className="flex gap-2">
+        <div className="flex gap-2 items-center">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".xlsx,.xls,.csv"
+            className="hidden"
+            onChange={handleFileInputChange}
+          />
+
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            className="px-3 py-1.5 text-xs font-semibold rounded bg-slate-200 text-slate-800"
+          >
+            Load Excel
+          </button>
+
+          <button
+            type="button"
+            onClick={handlePasteClipboard}
+            className="px-3 py-1.5 text-xs font-semibold rounded bg-slate-200 text-slate-800"
+          >
+            Paste
+          </button>
+
           <button
             type="button"
             onClick={onSubmit}
