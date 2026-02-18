@@ -13,3 +13,6 @@ export type CreateTask = zType.infer<typeof createTaskSchema>;
 export const createTaskLogsSchema = taskLogSchema.omit({ id: true });
 
 export type CreateTaskLog = zType.infer<typeof createTaskLogsSchema>;
+
+export * from "./config.schema";
+export * from "./elements.schema";
