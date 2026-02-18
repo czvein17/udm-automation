@@ -4,7 +4,7 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "tsc",
+    "build": "bunx tsc -p tsconfig.json",
     "dev": "bun --env-file=../.env --watch run src/index.ts",
     "db:generate": "bunx --env-file=../.env drizzle-kit generate",
     "db:migrate": "bunx --env-file=../.env drizzle-kit migrate"

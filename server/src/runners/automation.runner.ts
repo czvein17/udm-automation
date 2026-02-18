@@ -24,6 +24,7 @@ export function runAutomationJob(args: { runId: string; jobId: string }) {
     const text = buf.toString("utf8");
     for (const line of text.split(/\r?\n/)) {
       if (line.trim()) appendLog(runId, line);
+      if (line.trim()) console.log(`[AUTOMATION: ${runId}] ${line}`); // also log to server console
     }
   };
 
