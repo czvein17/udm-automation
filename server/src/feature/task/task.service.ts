@@ -33,3 +33,8 @@ export const createTaskLogs = async (payload: CreateTaskLog) => {
 export const deleteTaskLogs = async (id: string): Promise<void> => {
   await TaskRepo.deleteTaskLogs(id);
 };
+
+export const deleteTask = async () => {
+  await TaskRepo.deleteAllTaskLogs();
+  await TaskRepo.deleteAllTask();
+};

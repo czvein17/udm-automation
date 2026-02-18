@@ -35,3 +35,8 @@ export const deleteTaskLogs = async (c: Context) => {
   await taskService.deleteTaskLogs(id);
   return c.json({ message: "Task logs deleted successfully" }, { status: 200 });
 };
+
+export const clearTask = async (c: Context) => {
+  await taskService.deleteTask();
+  return c.json({ message: "All tasks cleared successfully" }, { status: 200 });
+};

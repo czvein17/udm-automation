@@ -5,7 +5,7 @@ import { launchBrowser } from "../../shared/browser";
 import YT_SEL from "../../selectors/youtube-selector";
 
 export async function runMultipleYtTabs(runId: string) {
-  console.log("Running Open Multiple YouTube Tabs job with runId:", runId);
+  console.log("[JOB open-youtube] start", { runId });
 
   const taskList = await YTService.getTasksByRunId(runId);
 

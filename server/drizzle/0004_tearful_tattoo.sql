@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX `config_configFor_unique` ON `config` (`configFor`);

@@ -10,10 +10,12 @@ dotenv.config({ path: path.resolve(repoRoot, ".env") });
 
 import { runOpenYoutube } from "./jobs/open-youtube";
 import { runMultipleYtTabs } from "./jobs/open-multiple";
+import { runUdmAutomation } from "./jobs/udm-automation";
 
 const jobRegistry = {
   "open-youtube": (runId: string) => runOpenYoutube(runId),
   "open-youtube-multiple": (runId: string) => runMultipleYtTabs(runId),
+  "udm-automation": (runId: string) => runUdmAutomation(runId),
   // "re-approve": runReApprove,
   // "re-approve translation": runReApproveTranslation,
   // "add-applicabilites": runAddApplicabilities,
@@ -25,16 +27,20 @@ type JobId = keyof typeof jobRegistry;
 const jobId = process.argv[2] as JobId;
 const runId = process.argv[3] as string;
 
-if (!jobId || (!(jobId in jobRegistry) && !runId)) {
+if (!jobId || !runId || !(jobId in jobRegistry)) {
   console.error("Usage: bunx tsx src/cli.ts <jobId> <runId>");
+  console.error("Valid jobIds:", Object.keys(jobRegistry).join(", "));
   process.exit(1);
 }
 
 async function main() {
+  console.log("CLI args:", process.argv.slice(2));
+  console.log("Selected jobId:", jobId);
+  console.log("Resolved handler:", jobRegistry[jobId]?.name ?? "<anonymous>");
+
   await jobRegistry[jobId](runId);
 }
 
 main().catch((err) => {
   console.error(err);
-  process.exit(1);
 });

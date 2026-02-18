@@ -22,6 +22,48 @@
       "when": 1771081474743,
       "tag": "0002_secret_roughhouse",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1771428446010,
+      "tag": "0003_burly_owl",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1771429605386,
+      "tag": "0004_tearful_tattoo",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1771432705420,
+      "tag": "0005_low_killer_shrike",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1771432825847,
+      "tag": "0006_quick_hulk",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "6",
+      "when": 1771432926597,
+      "tag": "0007_bored_wiccan",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "6",
+      "when": 1771433879138,
+      "tag": "0008_wide_killraven",
+      "breakpoints": true
     }
   ]
 }

@@ -11,6 +11,11 @@ coverage
 dist
 build
 
+#Data
+profile/*
+
+artifacts
+
 # misc
 .DS_Store
 .env
