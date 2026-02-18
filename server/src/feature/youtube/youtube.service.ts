@@ -21,6 +21,10 @@ export async function startOpenYoutubeRun(
     id: nanoid(),
     runId: runId,
     fieldName: payload.fieldName,
+    elementId: payload.elementId,
+    tableName: payload.tableName,
+    elementName: payload.elementName,
+    displayName: payload.displayName,
   };
 
   await YTRepo.createTask(newTask);
@@ -34,12 +38,16 @@ export async function openYtTabsMultiple(
   payloads: CreateTask[],
 ): Promise<{ runId: string }> {
   const runId = nanoid();
-  const jobId = "open-youtube-multiple";
+  const jobId = "udm-automation";
 
   const newTasks = payloads.map((payload) => ({
     id: nanoid(),
     runId: runId,
     fieldName: payload.fieldName,
+    elementId: payload.elementId,
+    tableName: payload.tableName,
+    elementName: payload.elementName,
+    displayName: payload.displayName,
   }));
 
   await YTRepo.createTaskMultiple(newTasks);

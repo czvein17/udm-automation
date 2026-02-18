@@ -12,7 +12,7 @@ import {
   getTaskByRunID,
   getTaskList,
 } from "./youtube.handler";
-import { zValidator } from "@hono/zod-validator";
+
 import { zodThrow } from "../../middleware/zodThrow";
 
 export const youtubeRoute = new Hono()
@@ -24,7 +24,6 @@ export const youtubeRoute = new Hono()
   )
 
   .get("/task-list/:runId", getTaskList)
-
   .get("/task", getTask)
   .get("/task/:runId", getTaskByRunID)
   .post("/task", zodThrow(createTaskSchema, "json"), createTask);
