@@ -4,6 +4,7 @@
 @theme {
   --color-wtwPrimary: #48086f;
   --color-wtwSecondary: #7f35b2;
+  --color-wtwAccent: #007fa7;
 
   --color-bgPrimary: "#f8fafc";
   --color-bgSecond: "#FFFFFF";
@@ -16,24 +17,56 @@
   }
 
   input[type="checkbox"] {
-    @apply accent-wtwSecondary cursor-pointer;
+    @apply cursor-pointer accent-wtwSecondary;
+  }
+
+  button {
+    @apply cursor-pointer;
   }
 }
 
 @layer components {
   .sidebar-link {
-    @apply text-slate-500 py-3 px-4 font-medium rounded hover:bg-wtwSecondary/10 hover:text-wtwPrimary flex items-center gap-2 text-sm transition-all;
+    @apply flex items-center gap-2 px-4 py-3 text-sm font-medium transition-all rounded text-slate-500 hover:bg-wtwSecondary/10 hover:text-wtwPrimary;
   }
 
   .sidebar-link-active {
-    @apply text-wtwPrimary rounded font-semibold;
+    @apply font-semibold rounded text-wtwPrimary;
   }
 
   .btn-primary {
-    @apply bg-wtwPrimary text-white py-2 px-5 rounded-lg hover:bg-wtwSecondary cursor-pointer;
+    @apply px-5 py-2 text-white rounded-lg cursor-pointer bg-wtwPrimary hover:bg-wtwSecondary;
+  }
+
+  .btn {
+    @apply px-3 py-1.5 text-xs font-semibold rounded bg-white border border-slate-200 text-slate-700 hover:bg-wtwSecondary hover:text-white;
+  }
+
+  .btn-danger {
+    @apply px-3 py-1.5 text-xs font-semibold rounded bg-white border border-slate-200 text-red-600 hover:bg-red-600 hover:text-white;
+  }
+
+  .form-row {
+    @apply flex items-center gap-3 mb-3;
+  }
+
+  .form-label {
+    @apply w-36 text-xs text-slate-600 font-semibold;
+  }
+
+  .form-input {
+    @apply flex-1 px-3 py-2 text-sm rounded border border-slate-200 bg-white outline-none;
+  }
+
+  .card-section {
+    @apply p-4 bg-white border rounded-lg shadow-sm border-slate-200;
+  }
+
+  .form-actions {
+    @apply mt-4 flex items-center gap-2;
   }
 
   .card {
-    @apply bg-white rounded-2xl border border-slate-200 shadow-sm h-full;
+    @apply h-full bg-white border shadow-sm rounded-2xl border-slate-200;
   }
 }
