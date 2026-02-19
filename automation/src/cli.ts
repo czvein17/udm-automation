@@ -8,6 +8,9 @@ const repoRoot = path.resolve(__dirname, "../../");
 
 dotenv.config({ path: path.resolve(repoRoot, ".env") });
 
+// set a friendly process title so the runtime is easier to identify in process lists
+process.title = "udm-automation-worker";
+
 import { runOpenYoutube } from "./jobs/open-youtube";
 import { runMultipleYtTabs } from "./jobs/open-multiple";
 import { runUdmAutomation } from "./jobs/udm-automation";

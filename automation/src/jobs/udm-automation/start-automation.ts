@@ -2,11 +2,13 @@ import type { Config } from "@server/db/schema";
 
 import * as YTService from "server/dist/feature/youtube/youtube.service";
 import * as TaskService from "server/dist/feature/task/task.service";
+
 import { buildRecordUrl } from "../../util/buildUrl";
-import { launchBrowser } from "../../shared/browser";
-import { getElementStatus } from "../../actions/udm-actions/checkElementStatus";
 import { cliLog } from "../../shared/cli-log";
+
+import { getElementStatus } from "../../actions/udm-actions/checkElementStatus";
 import { selectLanguage } from "../../actions/udm-actions/selectLanguage";
+
 import { editAttributes } from "./edit-attibutes";
 
 export const startAutomation = async (
@@ -66,18 +68,65 @@ export const startAutomation = async (
             });
           }
 
-          if (
-            config.translation.toLowerCase() !== "English" ||
-            config.translation.toLowerCase() !== "English (Default)"
-          ) {
-            await selectLanguage(page, config.translation);
+          // Translation: only select language when it's not English
+          try {
+            const translation = String(config.translation ?? "");
+            const tl = translation.toLowerCase();
+            if (tl !== "english" && tl !== "english (default)") {
+              cliLog(runId, "info", "language_select_attempt", {
+                translation,
+                taskId: task.id,
+              });
+
+              // attempt a Ctrl+Tab to avoid focus lock, then select language
+              try {
+                await page.keyboard.press("Control+Tab");
+              } catch (e) {
+                /* ignore if keyboard not available */
+              }
+
+              try {
+                await selectLanguage(page, translation);
+                cliLog(runId, "info", "language_selected", {
+                  translation,
+                  taskId: task.id,
+                });
+              } catch (err: any) {
+                cliLog(runId, "error", "language_selection_failed", {
+                  taskId: task.id,
+                  err: String(err),
+                });
+              }
+
+              // nudge focus forward so automation continues
+              try {
+                await page.waitForTimeout(250);
+                await page.keyboard.press("Tab");
+              } catch (e) {
+                // ignore
+              }
+            }
+          } catch (err) {
+            cliLog(runId, "error", "language_block_error", {
+              err: String(err),
+            });
           }
 
+          // Run automation specific action
           switch (config.automationType) {
             case "udm:edit_attributes":
-              console.log("Editing Attributes");
-              editAttributes(page, task);
+              cliLog(runId, "info", "automation_action", {
+                action: "edit_attributes",
+                taskId: task.id,
+              });
+              await editAttributes(page, task);
+              break;
 
+            default:
+              cliLog(runId, "debug", "automation_action_skipped", {
+                automationType: config.automationType,
+                taskId: task.id,
+              });
               break;
           }
         } catch (err: any) {
