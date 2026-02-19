@@ -6,6 +6,8 @@ import { buildRecordUrl } from "../../util/buildUrl";
 import { launchBrowser } from "../../shared/browser";
 import { getElementStatus } from "../../actions/udm-actions/checkElementStatus";
 import { cliLog } from "../../shared/cli-log";
+import { selectLanguage } from "../../actions/udm-actions/selectLanguage";
+import { editAttributes } from "./edit-attibutes";
 
 export const startAutomation = async (
   config: Config,
@@ -62,6 +64,21 @@ export const startAutomation = async (
               taskId: task.id,
               logs: [{ status: "failed", action: "element not approved" }],
             });
+          }
+
+          if (
+            config.translation.toLowerCase() !== "English" ||
+            config.translation.toLowerCase() !== "English (Default)"
+          ) {
+            await selectLanguage(page, config.translation);
+          }
+
+          switch (config.automationType) {
+            case "udm:edit_attributes":
+              console.log("Editing Attributes");
+              editAttributes(page, task);
+
+              break;
           }
         } catch (err: any) {
           cliLog(runId, "error", "Task step error", {
