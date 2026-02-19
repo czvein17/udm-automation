@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { ElementsTab } from "../components/ElementsTab";
+import { AutomationConfigTab } from "../components/AutomationConfigTab";
 
 export const Request = () => {
   const [activeTab, setActiveTab] = useState<string>("Elements");
@@ -8,9 +9,9 @@ export const Request = () => {
   const activeIndex = Math.max(0, configOptions.indexOf(activeTab));
 
   return (
-    <section className="card shadow-none flex flex-col h-full min-h-0">
+    <section className="flex flex-col h-full min-h-0 overflow-hidden border shadow-sm card none">
       {/* Tabs header (fixed) */}
-      <div className="relative flex border-b-2 border-slate-100 shrink-0">
+      <div className="relative flex border-b border-slate-200 shrink-0">
         {configOptions.map((option) => (
           <button
             key={option}
@@ -24,7 +25,7 @@ export const Request = () => {
         ))}
 
         <div
-          className="absolute bottom-0 left-0 h-0.5 bg-wtwSecondary transition-transform duration-200 ease-in-out"
+          className="absolute bottom-0 left-0 h-0.5 bg-wtwSecondary transition-transform duration-200 ease-in-out rounded-xl"
           style={{
             width: `${100 / configOptions.length}%`,
             transform: `translateX(${activeIndex * 100}%)`,
@@ -33,7 +34,7 @@ export const Request = () => {
       </div>
 
       {/* Tab content area (fills remaining height) */}
-      <div className="flex-1 min-h-0 overflow-hidden">
+      <div className="flex-1 min-h-0">
         {/* Only THIS inner wrapper scrolls per tab */}
         {activeTab === "Elements" && (
           <div className="h-full min-h-0 bg-[#f8fafc] p-2">
@@ -42,13 +43,13 @@ export const Request = () => {
         )}
 
         {activeTab === "Automation Config" && (
-          <div className="h-full min-h-0 overflow-auto p-2">
-            <div>Automation Config</div>
+          <div className="h-full min-h-0 p-2 overflow-auto">
+            <AutomationConfigTab />
           </div>
         )}
 
         {activeTab === "Auth" && (
-          <div className="h-full min-h-0 overflow-auto p-2">
+          <div className="h-full min-h-0 p-2 overflow-auto">
             <div>Auth</div>
           </div>
         )}
