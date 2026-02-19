@@ -4,6 +4,7 @@ import { EditableTextCell } from "./EditableTextCells";
 import { type RowFieldErrors } from "../utils/elements.error";
 import type { TableMeta } from "@tanstack/react-table";
 import { Trash2 } from "lucide-react";
+import { TableHeader } from "./TableHeader";
 type ElementsTableMeta = TableMeta<ElementRow> & {
   isSelected: (rowIndex: number) => boolean;
   toggleRow: (rowIndex: number) => void;
@@ -59,7 +60,8 @@ export function elementColumns(opts: {
     },
     {
       accessorKey: "fieldName",
-      header: "Field Name",
+      header: () => <TableHeader required={true} label="Field Name" />,
+
       cell: ({ table, row, column, getValue }) => (
         <EditableTextCell
           table={table}
@@ -74,7 +76,7 @@ export function elementColumns(opts: {
     },
     {
       accessorKey: "elementId",
-      header: "Element ID",
+      header: () => <TableHeader required={true} label="Element ID" />,
       cell: ({ table, row, column, getValue }) => (
         <EditableTextCell
           table={table}
@@ -89,7 +91,7 @@ export function elementColumns(opts: {
     },
     {
       accessorKey: "tableName",
-      header: "Table Name",
+      header: () => <TableHeader required={true} label="Table Name" />,
       cell: ({ table, row, column, getValue }) => (
         <EditableTextCell
           table={table}
@@ -104,7 +106,7 @@ export function elementColumns(opts: {
     },
     {
       accessorKey: "elementName",
-      header: "Element Name",
+      header: () => <TableHeader required={false} label="Element Name" />,
       cell: ({ table, row, column, getValue }) => (
         <EditableTextCell
           table={table}
@@ -118,7 +120,8 @@ export function elementColumns(opts: {
     },
     {
       accessorKey: "displayName",
-      header: "Display Name",
+      header: () => <TableHeader required={true} label="Display Name" />,
+
       cell: ({ table, row, column, getValue }) => (
         <EditableTextCell
           table={table}
@@ -140,7 +143,7 @@ export function elementColumns(opts: {
           <div className="flex items-center justify-end h-full" title="delete">
             <button
               onClick={() => meta?.deleteRow?.(row.index)}
-              className="p-1 text-slate-500 hover:text-red-500 cursor-pointer rounded"
+              className="p-1 rounded cursor-pointer text-slate-500 hover:text-red-500"
             >
               <Trash2 className="w-3.5 h-3.5" />
             </button>
