@@ -4,6 +4,7 @@ import {
   type LogLevel,
   postLogLineSchema,
 } from "./logs.schema";
+import { reportEventSchema } from "shared";
 
 const AUTO_PREFIX = /^\[AUTOMATION:\s*([^\]]+)\]\s*/;
 
@@ -13,6 +14,18 @@ function inferLevel(line: string): LogLevel {
   if (low.includes("unhandled") || low.includes("error")) return "error";
   if (low.includes("debug")) return "debug";
   return "info";
+}
+
+export function normalizeReporterMeta(message: unknown, meta: unknown) {
+  if (typeof message !== "string") return meta;
+  if (!meta || typeof meta !== "object") return meta;
+
+  const record = meta as Record<string, unknown>;
+  if (record.type !== message) return meta;
+
+  const parsed = reportEventSchema.safeParse(record);
+  if (!parsed.success) return meta;
+  return parsed.data;
 }
 
 export function parseLogLine(input: {
@@ -48,7 +61,10 @@ export function parseLogLine(input: {
         message: String(obj.message ?? raw),
         meta:
           obj.meta && typeof obj.meta === "object"
-            ? (obj.meta as Record<string, unknown>)
+            ? (normalizeReporterMeta(obj.message, obj.meta) as Record<
+                string,
+                unknown
+              >)
             : undefined,
         ctx:
           obj.ctx && typeof obj.ctx === "object"

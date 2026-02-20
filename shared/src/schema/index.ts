@@ -17,3 +17,4 @@ export type CreateTaskLog = zType.infer<typeof createTaskLogsSchema>;
 export * from "./config.schema";
 export * from "./elements.schema";
 export * from "./logs.schema";
+export * from "./reporter.schema";

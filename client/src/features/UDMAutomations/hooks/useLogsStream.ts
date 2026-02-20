@@ -1,30 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { LogEvent } from "shared";
 export type { LogEvent } from "shared";
-
-type WsMessage =
-  | { event: "logs:batch"; data: LogEvent[] }
-  | { event: "logs:line"; data: LogEvent };
-
-const MAX_EVENTS = 5000;
-
-function capEvents(items: LogEvent[]) {
-  if (items.length <= MAX_EVENTS) return items;
-  return items.slice(items.length - MAX_EVENTS);
-}
-
-function getServerHttpBaseUrl() {
-  const envUrl = import.meta.env.VITE_SERVER_URL as string | undefined;
-  if (envUrl && envUrl.trim()) return envUrl.trim();
-  const protocol = window.location.protocol === "https:" ? "https" : "http";
-  return `${protocol}://${window.location.hostname}:3000`;
-}
-
-function wsUrlForRun(runId: string) {
-  const httpBase = getServerHttpBaseUrl();
-  const wsBase = httpBase.replace(/^http:/i, "ws:").replace(/^https:/i, "wss:");
-  return `${wsBase}/ws/logs/${encodeURIComponent(runId)}`;
-}
+import {
+  capEvents,
+  getServerHttpBaseUrl,
+  MAX_RETRIES,
+  parseWsMessage,
+  reconnectDelayMs,
+  wsUrlForRun,
+} from "./useLogsStream.utils";
 
 export function useLogsStream(runId: string, initialLimit = 200) {
   const [items, setItems] = useState<LogEvent[]>([]);
@@ -86,7 +70,12 @@ export function useLogsStream(runId: string, initialLimit = 200) {
 
     setStatus("connecting");
 
-    const ws = new WebSocket(wsUrlForRun(runId));
+    const httpBase = getServerHttpBaseUrl({
+      envUrl: import.meta.env.VITE_SERVER_URL as string | undefined,
+      protocol: window.location.protocol,
+      hostname: window.location.hostname,
+    });
+    const ws = new WebSocket(wsUrlForRun(runId, httpBase));
     wsRef.current = ws;
 
     ws.onopen = () => {
@@ -95,17 +84,17 @@ export function useLogsStream(runId: string, initialLimit = 200) {
     };
 
     ws.onmessage = (event) => {
-      try {
-        const payload = JSON.parse(event.data) as WsMessage;
-        if (payload.event === "logs:batch") {
-          pushBatch(payload.data);
-          return;
-        }
-        if (payload.event === "logs:line") {
-          pushOne(payload.data);
-        }
-      } catch (err) {
-        console.error("Failed to parse ws message", err);
+      const payload = parseWsMessage(String(event.data));
+      if (!payload) {
+        console.error("Failed to parse ws message", event.data);
+        return;
+      }
+      if (payload.event === "logs:batch") {
+        pushBatch(payload.data);
+        return;
+      }
+      if (payload.event === "logs:line") {
+        pushOne(payload.data);
       }
     };
 
@@ -113,14 +102,14 @@ export function useLogsStream(runId: string, initialLimit = 200) {
       wsRef.current = null;
       if (!allowReconnectRef.current) return;
       if (!runId) return;
-      if (retriesRef.current >= 5) {
+      if (retriesRef.current >= MAX_RETRIES) {
         setStatus("disconnected");
         return;
       }
 
       const retry = retriesRef.current + 1;
       retriesRef.current = retry;
-      const delay = Math.min(1000 * 2 ** (retry - 1), 8000);
+      const delay = reconnectDelayMs(retry);
       setStatus("connecting");
 
       reconnectTimerRef.current = window.setTimeout(() => {

@@ -1,10 +1,9 @@
+import type {
+  ReportEvent as SharedReportEvent,
+  ReporterConfig,
+  ReporterRowContext,
+} from "shared";
 import { makeLogger, type LogContext, type LogLevel } from "./logger";
-
-type ReporterConfig = {
-  surveyline?: string;
-  automationType?: string;
-  translation?: string;
-};
 
 type ReporterOptions = {
   runId: string;
@@ -12,18 +11,10 @@ type ReporterOptions = {
   runnerId: string;
   config?: ReporterConfig;
   source?: "automation" | "server";
+  transport?: ReporterTransport;
 };
 
-export type RowContext = {
-  rowIndex: number;
-  taskId?: string;
-  fieldName?: string;
-  elementId?: string;
-  elementName?: string;
-  displayName?: string;
-  tableName?: string;
-  url?: string;
-};
+export type RowContext = ReporterRowContext;
 
 type RowStepDetails = Record<string, unknown>;
 
@@ -33,42 +24,33 @@ type RowFailInput = {
 };
 
 export type ReportEvent =
-  | {
-      type: "run_start";
-      ts: string;
-      runId: string;
-      jobId: string;
-      runnerId: string;
-      config?: ReporterConfig;
-    }
-  | {
-      type: "row_start";
-      ts: string;
-      runId: string;
-      rowIndex: number;
-      ctx: RowContext;
-    }
-  | {
-      type: "row_step";
-      ts: string;
-      runId: string;
-      rowIndex: number;
-      title: string;
-      details?: RowStepDetails;
-    }
-  | {
-      type: "row_end";
-      ts: string;
-      runId: string;
-      rowIndex: number;
-      status: "ok" | "fail";
-      summary?: string;
-      error?: {
-        code: string;
-        message: string;
-        hint?: string;
-      };
-    };
+  | Extract<SharedReportEvent, { type: "run_start" }>
+  | Extract<SharedReportEvent, { type: "row_start" }>
+  | Extract<SharedReportEvent, { type: "row_step" }>
+  | Extract<SharedReportEvent, { type: "row_end" }>;
+
+type ReporterTransport = {
+  info: (
+    message: string,
+    meta?: Record<string, unknown>,
+    ctx?: LogContext,
+  ) => Promise<void>;
+  warn: (
+    message: string,
+    meta?: Record<string, unknown>,
+    ctx?: LogContext,
+  ) => Promise<void>;
+  error: (
+    message: string,
+    meta?: Record<string, unknown>,
+    ctx?: LogContext,
+  ) => Promise<void>;
+  debug: (
+    message: string,
+    meta?: Record<string, unknown>,
+    ctx?: LogContext,
+  ) => Promise<void>;
+};
 
 function nowIso() {
   return new Date().toISOString();
@@ -99,21 +81,90 @@ function toLogContext(input: RowContext): LogContext {
 
 type EmitInput = {
   level?: Exclude<LogLevel, "debug"> | "debug";
-  message: ReportEvent["type"];
+  event: ReportEvent;
   ctx?: LogContext;
-  meta: Record<string, unknown>;
 };
 
+export function createRunStartEvent(input: {
+  runId: string;
+  jobId: string;
+  runnerId: string;
+  config?: ReporterConfig;
+  ts?: string;
+}): Extract<ReportEvent, { type: "run_start" }> {
+  return {
+    type: "run_start",
+    ts: input.ts ?? nowIso(),
+    runId: input.runId,
+    jobId: input.jobId,
+    runnerId: input.runnerId,
+    config: input.config,
+  };
+}
+
+export function createRowStartEvent(input: {
+  runId: string;
+  rowIndex: number;
+  ctx: RowContext;
+  ts?: string;
+}): Extract<ReportEvent, { type: "row_start" }> {
+  return {
+    type: "row_start",
+    ts: input.ts ?? nowIso(),
+    runId: input.runId,
+    rowIndex: input.rowIndex,
+    ctx: input.ctx,
+  };
+}
+
+export function createRowStepEvent(input: {
+  runId: string;
+  rowIndex: number;
+  title: string;
+  details?: RowStepDetails;
+  ts?: string;
+}): Extract<ReportEvent, { type: "row_step" }> {
+  return {
+    type: "row_step",
+    ts: input.ts ?? nowIso(),
+    runId: input.runId,
+    rowIndex: input.rowIndex,
+    title: input.title,
+    details: input.details,
+  };
+}
+
+export function createRowEndEvent(input: {
+  runId: string;
+  rowIndex: number;
+  status: "ok" | "fail";
+  summary?: string;
+  error?: { code: string; message: string; hint?: string };
+  ts?: string;
+}): Extract<ReportEvent, { type: "row_end" }> {
+  return {
+    type: "row_end",
+    ts: input.ts ?? nowIso(),
+    runId: input.runId,
+    rowIndex: input.rowIndex,
+    status: input.status,
+    summary: input.summary,
+    error: input.error,
+  };
+}
+
 export function createReporter(options: ReporterOptions) {
-  const logger = makeLogger({
-    runId: options.runId,
-    jobId: options.jobId,
-    runnerId: options.runnerId,
-    source: options.source ?? "automation",
-    surveyline: options.config?.surveyline,
-    automationType: options.config?.automationType,
-    translation: options.config?.translation,
-  });
+  const transport: ReporterTransport =
+    options.transport ??
+    makeLogger({
+      runId: options.runId,
+      jobId: options.jobId,
+      runnerId: options.runnerId,
+      source: options.source ?? "automation",
+      surveyline: options.config?.surveyline,
+      automationType: options.config?.automationType,
+      translation: options.config?.translation,
+    });
 
   const runCtx: LogContext = {
     surveyline: options.config?.surveyline,
@@ -126,40 +177,37 @@ export function createReporter(options: ReporterOptions) {
       ...runCtx,
       ...(input.ctx ?? {}),
     };
+    const meta = input.event as Record<string, unknown>;
 
     if (level === "debug") {
       if (!isDebugEnabled()) return;
-      await logger.debug(input.message, input.meta, ctx);
+      await transport.debug(input.event.type, meta, ctx);
       return;
     }
 
     if (level === "warn") {
-      await logger.warn(input.message, input.meta, ctx);
+      await transport.warn(input.event.type, meta, ctx);
       return;
     }
 
     if (level === "error") {
-      await logger.error(input.message, input.meta, ctx);
+      await transport.error(input.event.type, meta, ctx);
       return;
     }
 
-    await logger.info(input.message, input.meta, ctx);
+    await transport.info(input.event.type, meta, ctx);
   }
 
   async function runStart() {
-    const ts = nowIso();
-    const event: ReportEvent = {
-      type: "run_start",
-      ts,
+    const event = createRunStartEvent({
       runId: options.runId,
       jobId: options.jobId,
       runnerId: options.runnerId,
       config: options.config,
-    };
+    });
 
     await emit({
-      message: "run_start",
-      meta: event,
+      event,
     });
   }
 
@@ -172,19 +220,15 @@ export function createReporter(options: ReporterOptions) {
       if (started) return;
       started = true;
 
-      const ts = nowIso();
-      const event: ReportEvent = {
-        type: "row_start",
-        ts,
+      const event = createRowStartEvent({
         runId: options.runId,
         rowIndex: rowInput.rowIndex,
         ctx: rowInput,
-      };
+      });
 
       await emit({
-        message: "row_start",
+        event,
         ctx: rowCtx,
-        meta: event,
       });
     }
 
@@ -192,40 +236,32 @@ export function createReporter(options: ReporterOptions) {
       step: async (title: string, details?: RowStepDetails) => {
         await ensureStart();
 
-        const ts = nowIso();
-        const event: ReportEvent = {
-          type: "row_step",
-          ts,
+        const event = createRowStepEvent({
           runId: options.runId,
           rowIndex: rowInput.rowIndex,
           title,
           details,
-        };
+        });
 
         await emit({
-          message: "row_step",
+          event,
           ctx: rowCtx,
-          meta: event,
         });
       },
       warn: async (title: string, details?: RowStepDetails) => {
         await ensureStart();
 
-        const ts = nowIso();
-        const event: ReportEvent = {
-          type: "row_step",
-          ts,
+        const event = createRowStepEvent({
           runId: options.runId,
           rowIndex: rowInput.rowIndex,
           title,
           details,
-        };
+        });
 
         await emit({
           level: "warn",
-          message: "row_step",
+          event,
           ctx: rowCtx,
-          meta: event,
         });
       },
       ok: async (summary?: string) => {
@@ -233,20 +269,16 @@ export function createReporter(options: ReporterOptions) {
         await ensureStart();
         ended = true;
 
-        const ts = nowIso();
-        const event: ReportEvent = {
-          type: "row_end",
-          ts,
+        const event = createRowEndEvent({
           runId: options.runId,
           rowIndex: rowInput.rowIndex,
           status: "ok",
           summary,
-        };
+        });
 
         await emit({
-          message: "row_end",
+          event,
           ctx: rowCtx,
-          meta: event,
         });
       },
       fail: async (code: string, error: RowFailInput) => {
@@ -254,10 +286,7 @@ export function createReporter(options: ReporterOptions) {
         await ensureStart();
         ended = true;
 
-        const ts = nowIso();
-        const event: ReportEvent = {
-          type: "row_end",
-          ts,
+        const event = createRowEndEvent({
           runId: options.runId,
           rowIndex: rowInput.rowIndex,
           status: "fail",
@@ -267,13 +296,12 @@ export function createReporter(options: ReporterOptions) {
             message: error.message,
             hint: error.hint,
           },
-        };
+        });
 
         await emit({
           level: "error",
-          message: "row_end",
+          event,
           ctx: rowCtx,
-          meta: event,
         });
       },
     };
