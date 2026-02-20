@@ -19,9 +19,10 @@ export default {
   btnUnlock: "#btn-unlock",
   btnSave: "#btn-save-element-properties",
   btnApprove: "#btn-approve",
-  BTN_SUBMIT_REVIEW_CONTAINER: "#btn-submit-for-approval",
+  btnSubmitForReview: "#btn-submit-for-approval",
 
   attrElemNameInput: "#element-name",
+  attrFieldNameInput: "#field-name",
 
   spinner: ".ngx-spinner-overlay",
 };

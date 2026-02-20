@@ -10,6 +10,8 @@ import { getElementStatus } from "../../actions/udm-actions/checkElementStatus";
 import { selectLanguage } from "../../actions/udm-actions/selectLanguage";
 
 import { editAttributes } from "./edit-attibutes";
+import { reApprove } from "./re-approve";
+import { checkFieldName } from "../../actions/udm-actions/checkFieldName";
 
 export const startAutomation = async (
   config: Config,
@@ -22,7 +24,7 @@ export const startAutomation = async (
     throw new Error("No tasks found for runId: " + runId);
   }
 
-  const BATCH_SIZE = 3;
+  const BATCH_SIZE = 2;
   for (let i = 0; i < taskList.length; i += BATCH_SIZE) {
     const chunk = taskList.slice(i, i + BATCH_SIZE);
 
@@ -66,6 +68,47 @@ export const startAutomation = async (
               taskId: task.id,
               logs: [{ status: "failed", action: "element not approved" }],
             });
+          }
+          // CHECK: If the field name on the page doesn't match the task.fieldName, skip this task.
+          try {
+            const { match, found } = await checkFieldName(page, task.fieldName);
+            if (!match) {
+              cliLog(runId, "info", "field_name_mismatch", {
+                taskId: task.id,
+                expected: task.fieldName,
+                found,
+              });
+
+              await TaskService.createTaskLogs({
+                taskId: task.id,
+                logs: [
+                  {
+                    status: "failed",
+                    action: `field name mismatch expected:${task.fieldName} found:${found}`,
+                  },
+                ],
+              });
+
+              // skip further automation for this task
+              return;
+            }
+
+            console.log("FIELD NAME MATCH");
+          } catch (err: any) {
+            cliLog(runId, "error", "field_name_check_error", {
+              taskId: task.id,
+              err: String(err),
+            });
+            await TaskService.createTaskLogs({
+              taskId: task.id,
+              logs: [
+                {
+                  status: "failed",
+                  action: `field name check error: ${err?.message ?? err}`,
+                },
+              ],
+            });
+            return;
           }
 
           // Translation: only select language when it's not English
@@ -114,6 +157,26 @@ export const startAutomation = async (
 
           // Run automation specific action
           switch (config.automationType) {
+            case "udm:open_open_elem":
+              cliLog(runId, "info", "automation_action", {
+                action: "open_open_elem",
+                taskId: task.id,
+              });
+
+              console.log("OPENING ELEMENTS");
+              break;
+
+            case "udm:re-approve":
+              cliLog(runId, "info", "automation_action", {
+                action: "re-approve",
+                taskId: task.id,
+              });
+
+              console.log("RE-APPROVING ELEMENTS");
+              await reApprove(page);
+
+              break;
+
             case "udm:edit_attributes":
               cliLog(runId, "info", "automation_action", {
                 action: "edit_attributes",
