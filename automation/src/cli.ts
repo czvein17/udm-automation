@@ -14,6 +14,7 @@ process.title = "udm-automation-worker";
 import { runOpenYoutube } from "./jobs/open-youtube";
 import { runMultipleYtTabs } from "./jobs/open-multiple";
 import { runUdmAutomation } from "./jobs/udm-automation";
+import { makeLogger } from "./shared/logger";
 
 const jobRegistry = {
   "open-youtube": (runId: string) => runOpenYoutube(runId),
@@ -45,5 +46,11 @@ async function main() {
 }
 
 main().catch((err) => {
+  const logger = makeLogger({
+    runId: runId || "unknown",
+    jobId: jobId || "unknown",
+    runnerId: `pid-${process.pid}`,
+  });
+  void logger.error("task_end", { result: "failed", error: err?.message });
   console.error(err);
 });

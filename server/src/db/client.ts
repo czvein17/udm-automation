@@ -33,6 +33,20 @@ void (async () => {
         FOREIGN KEY (taskId) REFERENCES tasks(id)
       );
     `);
+    await (client as any).execute(`
+      CREATE TABLE IF NOT EXISTS automation_logs (
+        id TEXT PRIMARY KEY,
+        runId TEXT NOT NULL,
+        jobId TEXT NULL,
+        runnerId TEXT NULL,
+        ts TEXT NOT NULL,
+        level TEXT NOT NULL,
+        message TEXT NOT NULL,
+        metaJson TEXT NULL,
+        raw TEXT NULL,
+        seq INTEGER NOT NULL
+      );
+    `);
   } catch (e) {
     console.warn("Could not ensure tasks table exists:", e);
   }

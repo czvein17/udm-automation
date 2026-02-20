@@ -44,7 +44,11 @@ const HEADER_ALIASES: Record<
   status: null,
 };
 
-export function ElementsTab() {
+type ElementsTabProps = {
+  onSubmittedRunId?: (runId: string) => void;
+};
+
+export function ElementsTab({ onSubmittedRunId }: ElementsTabProps) {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const [data, setData] = useState<ElementRow[]>(initialRows);
@@ -53,7 +57,9 @@ export function ElementsTab() {
   const [submitted, setSubmitted] = useState(false);
   const [errors, setErrors] = useState<RowFieldErrors>({});
 
-  const { mutateFn: submitElementsList } = useElementServices();
+  const { mutateFn: submitElementsList } = useElementServices({
+    onSubmitted: onSubmittedRunId,
+  });
 
   const columns = useMemo(
     () => elementColumns({ submitted, errors }),

@@ -4,7 +4,6 @@ import * as YTService from "server/dist/feature/youtube/youtube.service";
 import * as TaskService from "server/dist/feature/task/task.service";
 
 import { buildRecordUrl } from "../../util/buildUrl";
-import { cliLog } from "../../shared/cli-log";
 
 import { getElementStatus } from "../../actions/udm-actions/checkElementStatus";
 import { selectLanguage } from "../../actions/udm-actions/selectLanguage";
@@ -12,11 +11,13 @@ import { selectLanguage } from "../../actions/udm-actions/selectLanguage";
 import { editAttributes } from "./edit-attibutes";
 import { reApprove } from "./re-approve";
 import { checkFieldName } from "../../actions/udm-actions/checkFieldName";
+import type { AutomationLogger } from "../../shared/logger";
 
 export const startAutomation = async (
   config: Config,
   runId: string,
   context: any,
+  logger: AutomationLogger,
 ) => {
   const taskList = await YTService.getTasksByRunId(runId);
 
@@ -48,7 +49,18 @@ export const startAutomation = async (
             elementId,
           );
 
-          cliLog(runId, "info", "navigate", { url });
+          const ctx = {
+            taskId: task.id,
+            fieldName: task.fieldName,
+            elementId: task.elementId,
+            elementName: task.elementName ?? undefined,
+            displayName: task.displayName ?? undefined,
+            tableName: task.tableName,
+            surveyline: config.surveyline ?? undefined,
+            automationType: config.automationType,
+          };
+
+          await logger.info("navigate", { url }, ctx);
 
           await page.goto(url, { waitUntil: "domcontentloaded" });
 
@@ -57,7 +69,7 @@ export const startAutomation = async (
 
           const status = await getElementStatus(page);
 
-          cliLog(runId, "debug", "element_status", { taskId: task.id, status });
+          await logger.debug("element_status", { status }, ctx);
           if (status === "approved") {
             await TaskService.createTaskLogs({
               taskId: task.id,
@@ -73,11 +85,14 @@ export const startAutomation = async (
           try {
             const { match, found } = await checkFieldName(page, task.fieldName);
             if (!match) {
-              cliLog(runId, "info", "field_name_mismatch", {
-                taskId: task.id,
-                expected: task.fieldName,
-                found,
-              });
+              await logger.info(
+                "field_name_mismatch",
+                {
+                  expected: task.fieldName,
+                  found,
+                },
+                ctx,
+              );
 
               await TaskService.createTaskLogs({
                 taskId: task.id,
@@ -95,10 +110,11 @@ export const startAutomation = async (
 
             console.log("FIELD NAME MATCH");
           } catch (err: any) {
-            cliLog(runId, "error", "field_name_check_error", {
-              taskId: task.id,
-              err: String(err),
-            });
+            await logger.error(
+              "field_name_check_error",
+              { err: String(err) },
+              ctx,
+            );
             await TaskService.createTaskLogs({
               taskId: task.id,
               logs: [
@@ -116,10 +132,11 @@ export const startAutomation = async (
             const translation = String(config.translation ?? "");
             const tl = translation.toLowerCase();
             if (tl !== "english" && tl !== "english (default)") {
-              cliLog(runId, "info", "language_select_attempt", {
-                translation,
-                taskId: task.id,
-              });
+              await logger.info(
+                "language_select_attempt",
+                { translation },
+                ctx,
+              );
 
               // attempt a Ctrl+Tab to avoid focus lock, then select language
               try {
@@ -130,15 +147,13 @@ export const startAutomation = async (
 
               try {
                 await selectLanguage(page, translation);
-                cliLog(runId, "info", "language_selected", {
-                  translation,
-                  taskId: task.id,
-                });
+                await logger.info("language_selected", { translation }, ctx);
               } catch (err: any) {
-                cliLog(runId, "error", "language_selection_failed", {
-                  taskId: task.id,
-                  err: String(err),
-                });
+                await logger.error(
+                  "language_selection_failed",
+                  { err: String(err) },
+                  ctx,
+                );
               }
 
               // nudge focus forward so automation continues
@@ -150,27 +165,31 @@ export const startAutomation = async (
               }
             }
           } catch (err) {
-            cliLog(runId, "error", "language_block_error", {
-              err: String(err),
-            });
+            await logger.error(
+              "language_block_error",
+              { err: String(err) },
+              ctx,
+            );
           }
 
           // Run automation specific action
           switch (config.automationType) {
             case "udm:open_open_elem":
-              cliLog(runId, "info", "automation_action", {
-                action: "open_open_elem",
-                taskId: task.id,
-              });
+              await logger.info(
+                "automation_action",
+                { action: "open_open_elem" },
+                ctx,
+              );
 
               console.log("OPENING ELEMENTS");
               break;
 
             case "udm:re-approve":
-              cliLog(runId, "info", "automation_action", {
-                action: "re-approve",
-                taskId: task.id,
-              });
+              await logger.info(
+                "automation_action",
+                { action: "re-approve" },
+                ctx,
+              );
 
               console.log("RE-APPROVING ELEMENTS");
               await reApprove(page);
@@ -178,25 +197,37 @@ export const startAutomation = async (
               break;
 
             case "udm:edit_attributes":
-              cliLog(runId, "info", "automation_action", {
-                action: "edit_attributes",
-                taskId: task.id,
-              });
-              await editAttributes(page, task);
+              await logger.info(
+                "automation_action",
+                { action: "edit_attributes" },
+                ctx,
+              );
+              await editAttributes(page, task, logger, ctx);
               break;
 
             default:
-              cliLog(runId, "debug", "automation_action_skipped", {
-                automationType: config.automationType,
-                taskId: task.id,
-              });
+              await logger.debug(
+                "automation_action_skipped",
+                { automationType: config.automationType },
+                ctx,
+              );
               break;
           }
         } catch (err: any) {
-          cliLog(runId, "error", "Task step error", {
-            taskId: task.id,
-            err: String(err),
-          });
+          await logger.error(
+            "task_step_error",
+            { err: String(err) },
+            {
+              taskId: task.id,
+              fieldName: task.fieldName,
+              elementId: task.elementId,
+              elementName: task.elementName ?? undefined,
+              displayName: task.displayName ?? undefined,
+              tableName: task.tableName,
+              surveyline: config.surveyline ?? undefined,
+              automationType: config.automationType,
+            },
+          );
           await TaskService.createTaskLogs({
             taskId: task.id,
             logs: [
