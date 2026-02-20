@@ -1,5 +1,5 @@
 # deps
 node_modules/
 dev.db
-dev.dd
+dev.db
 auth.storage.json
