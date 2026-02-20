@@ -7,6 +7,9 @@ import path from "node:path";
 import { appRouter } from "./app/router";
 import { errorMiddleware } from "./middleware/errorHandler";
 
+process.title = "bhvr-api-dev";
+console.log(`🚀 ${process.title} running (PID: ${process.pid})`);
+
 const BUN_ENV = process.env.NODE_ENV || "development";
 const clientDist = path.resolve(process.cwd(), "../client/dist");
 

@@ -45,3 +45,6 @@ pnpm-debug.log*
 # Bun
 bun.lockb
 .turbo
+
+# local auth storage
+auth.storage.json

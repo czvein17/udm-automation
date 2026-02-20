@@ -17,6 +17,7 @@ import {
   type ElementsTableMeta as HookMeta,
 } from "../hooks/useElementsTableMeta";
 import { useElementServices } from "../hooks/useElementsServices";
+import { ClipboardPaste, Plus, Table2 } from "lucide-react";
 
 type ElementsTableMeta = HookMeta;
 
@@ -331,17 +332,50 @@ export function ElementsTab() {
   }
 
   return (
-    <div className="h-full min-h-0 flex flex-col gap-2">
+    <div className="flex flex-col h-full min-h-0 gap-2">
+      <div className="flex justify-end gap-2">
+        <button
+          type="button"
+          onClick={addRow}
+          id="add-row-button"
+          className="p-2 text-xs transition-all duration-200 ease-in-out rounded-md shadow-sm bg-slate-200 text-slate-900 hover:bg-slate-900 hover:text-white"
+          title="add new row"
+        >
+          <Plus className="w-4 h-4" />
+        </button>
+
+        <button
+          type="button"
+          onClick={handlePasteClipboard}
+          id="paste-clipboard-button"
+          className="flex items-center justify-center gap-1 px-3 py-2 text-xs font-semibold tracking-wide duration-200 ease-in-out bg-white border rounded-lg shadow-sm text-slate-600 border-slate-200 hover:bg-slate-900 hover:text-white"
+          title="paste from clipboard"
+        >
+          <ClipboardPaste className="w-4 h-4" />
+
+          <span>Paste</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => fileInputRef.current?.click()}
+          className="flex items-center justify-center gap-1 px-3 py-2 text-xs font-semibold tracking-wide duration-200 ease-in-out bg-white border rounded-lg shadow-sm text-slate-600 border-slate-200 hover:bg-slate-900 hover:text-white"
+        >
+          <Table2 className="w-4 h-4" />
+          <span>Load Excel</span>
+        </button>
+      </div>
+
       {/* Table */}
       <ElementsTable table={table} />
       {/* Toolbar */}
-      <div className="shrink-0 flex items-center justify-between">
+      <div className="flex items-center justify-between shrink-0">
         <div className="text-xs text-slate-500">
           Rows:{" "}
           <span className="font-semibold text-slate-700">{data.length}</span>
         </div>
 
-        <div className="flex gap-2 items-center">
+        <div className="flex items-center gap-2">
           <input
             ref={fileInputRef}
             type="file"
@@ -352,18 +386,10 @@ export function ElementsTab() {
 
           <button
             type="button"
-            onClick={() => fileInputRef.current?.click()}
-            className="px-3 py-1.5 text-xs font-semibold rounded bg-slate-200 text-slate-800"
+            onClick={clearAll}
+            className="px-3 py-1.5 text-xs font-semibold rounded border border-slate-200 bg-white"
           >
-            Load Excel
-          </button>
-
-          <button
-            type="button"
-            onClick={handlePasteClipboard}
-            className="px-3 py-1.5 text-xs font-semibold rounded bg-slate-200 text-slate-800"
-          >
-            Paste
+            Clear
           </button>
 
           <button
@@ -372,22 +398,6 @@ export function ElementsTab() {
             className="px-3 py-1.5 text-xs font-semibold rounded bg-wtwSecondary text-white"
           >
             Submit
-          </button>
-
-          <button
-            type="button"
-            onClick={addRow}
-            className="px-3 py-1.5 text-xs font-semibold rounded bg-slate-900 text-white"
-          >
-            Add row
-          </button>
-
-          <button
-            type="button"
-            onClick={clearAll}
-            className="px-3 py-1.5 text-xs font-semibold rounded border border-slate-200 bg-white"
-          >
-            Clear
           </button>
         </div>
       </div>

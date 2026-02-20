@@ -7,7 +7,7 @@ type Props = {
 
 export function ElementsTable({ table }: Props) {
   return (
-    <div className="flex-1 min-h-0 overflow-auto rounded-lg border border-slate-200 bg-white">
+    <div className="flex-1 min-h-0 overflow-auto bg-white border rounded-lg shadow-xs border-slate-200">
       <table className="w-full border-collapse">
         <thead className="sticky top-0 z-10 bg-white">
           {table.getHeaderGroups().map((hg) => (
@@ -29,7 +29,6 @@ export function ElementsTable({ table }: Props) {
                       header.column.columnDef.header,
                       header.getContext(),
                     )}
-                    {!isFirstCol && !isLastCol && ":"}
                   </th>
                 );
               })}
@@ -47,7 +46,7 @@ export function ElementsTable({ table }: Props) {
                   const isLastCol = colIndex === cells.length - 1;
                   const cls = [
                     "px-2 py-2 ",
-                    isFirstCol ? "pl-4 cursor-pointer" : "",
+                    isFirstCol ? "pl-4" : "",
                     isLastCol ? "pr-6 py-3" : "",
                     "align-top",
                   ]
