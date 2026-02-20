@@ -76,3 +76,47 @@ export function buildTaskContext(input: {
     automationType: input.automationType,
   };
 }
+
+type ActionLevel = "debug" | "info" | "warn";
+
+export async function logAction(
+  logger: AutomationLogger,
+  label: string,
+  ctx?: LogContext,
+  meta?: LogMeta,
+  level: ActionLevel = "info",
+) {
+  if (level === "debug") {
+    await logger.debug(label, meta, ctx);
+    return;
+  }
+  if (level === "warn") {
+    await logger.warn(label, meta, ctx);
+    return;
+  }
+  await logger.info(label, meta, ctx);
+}
+
+export async function logFailed(
+  logger: AutomationLogger,
+  label: string,
+  error: unknown,
+  ctx?: LogContext,
+  meta?: LogMeta,
+) {
+  const errMessage =
+    error instanceof Error
+      ? error.message
+      : typeof error === "string"
+        ? error
+        : String(error);
+
+  await logger.error(
+    label,
+    {
+      ...(meta ?? {}),
+      err: errMessage,
+    },
+    ctx,
+  );
+}

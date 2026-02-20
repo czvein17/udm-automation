@@ -145,7 +145,65 @@ The detailed raw timeline was intentionally removed to keep the UI focused.
 
 ---
 
-## 7) How to extend for a new automation feature
+## 7) User-facing log lifecycle (step-by-step)
+
+This is the practical flow users see in the Logs UI for one task row.
+
+1. Task starts and opens the record page.
+
+- event emitted: `navigate`
+- action shown: `Navigate: <url>`
+
+2. Element state is checked.
+
+- event emitted: `element_status` (meta: `status`)
+- action shown: `Element Status: Approved | Draft | Pending | ...`
+
+3. Language selection is attempted (if translation is not English).
+
+- event emitted: `language_select_attempt` (meta: `translation`)
+- action shown: `Language Select: <language>`
+
+4. Language selection success is recorded.
+
+- event emitted: `language_selected` (meta: `selected=true`)
+- action shown: `Language Selected: Yes`
+
+5. Automation type action runs (or is skipped).
+
+- event emitted: `automation_action` or `automation_action_skipped`
+- action shown: `Automation Action: <name>` or `Automation Skipped: <type>`
+
+6. Any failures are surfaced.
+
+- event emitted: `*_error` (level: `error`, meta: `err`)
+- shown in row `ISSUES` or `global Issues` panel
+
+Row grouping key priority in UI:
+
+1. `taskId`
+2. fallback composite: `fieldName + elementId + elementName + displayName + tableName`
+
+So, as long as `ctx.taskId` is present, all related events stay in the same row card.
+
+---
+
+## 8) Event-to-UI action mapping
+
+| Event key                   | Required meta/ctx     | User action text              |
+| --------------------------- | --------------------- | ----------------------------- |
+| `navigate`                  | `meta.url`            | `Navigate: <url>`             |
+| `element_status`            | `meta.status`         | `Element Status: <Status>`    |
+| `language_select_attempt`   | `meta.translation`    | `Language Select: <Language>` |
+| `language_selected`         | `meta.selected`       | `Language Selected: Yes/No`   |
+| `automation_action`         | `meta.action`         | `Automation Action: <Action>` |
+| `automation_action_skipped` | `meta.automationType` | `Automation Skipped: <Type>`  |
+
+If `meta` is missing, UI falls back to safe defaults (`Unknown` / `-`) so the panel remains readable.
+
+---
+
+## 9) How to extend for a new automation feature
 
 1. Create logger once via `createFeatureLogger(...)`.
 2. Build per-task context via `buildTaskContext(...)`.
@@ -154,7 +212,7 @@ The detailed raw timeline was intentionally removed to keep the UI focused.
 
 ---
 
-## 8) Notes / constraints
+## 10) Notes / constraints
 
 - Keep backend stream format unchanged (already integrated).
 - Keep UI parser tolerant of mixed payload quality.

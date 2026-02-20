@@ -1,5 +1,6 @@
 import type { TaskLog, TaskLogs } from "./task.types";
 import * as TaskRepo from "./task.repo";
+import * as LogRepo from "../logs/logs.repo";
 import type { CreateTaskLog } from "shared";
 import { nanoid } from "nanoid";
 
@@ -37,4 +38,5 @@ export const deleteTaskLogs = async (id: string): Promise<void> => {
 export const deleteTask = async () => {
   await TaskRepo.deleteAllTaskLogs();
   await TaskRepo.deleteAllTask();
+  await LogRepo.deleteAllLogs();
 };

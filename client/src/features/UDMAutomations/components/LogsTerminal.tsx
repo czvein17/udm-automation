@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef } from "react";
 import { useLogsStream, type LogEvent } from "../hooks/useLogsStream";
+import { ChevronRight } from "lucide-react";
 
 type LogsTerminalProps = {
   runId: string;
@@ -20,6 +21,7 @@ type DisplayRow = {
 
 type TaskGroup = {
   key: string;
+  taskId?: string;
   fieldName?: string;
   elementId?: string;
   elementName?: string;
@@ -63,6 +65,11 @@ function asText(value: unknown): string | undefined {
 function truncate(text: string, max = 120) {
   if (text.length <= max) return text;
   return `${text.slice(0, max - 1)}…`;
+}
+
+function toTitleCase(value: string) {
+  if (!value) return value;
+  return value.charAt(0).toUpperCase() + value.slice(1).toLowerCase();
 }
 
 function isNoiseLine(text: string) {
@@ -240,21 +247,70 @@ function toDisplayRow(event: LogEvent, index: number): DisplayRow | null {
   }
 
   if (message === "element_status") {
-    const taskId = asText(meta.taskId) ?? asText(ctx.taskId);
-    const status = asText(meta.status) ?? "unknown";
+    const status = asText(meta.status) ?? "Unknown";
     return {
       id: rowId,
       ts,
       level,
       title: "Element status",
-      subtitle: [taskId ? `taskId=${taskId}` : undefined, status]
-        .filter(Boolean)
-        .join(" • "),
+      subtitle: toTitleCase(status),
       details: toDetails([
-        ["taskId", taskId],
+        ["taskId", asText(meta.taskId) ?? asText(ctx.taskId)],
         ["status", status],
       ]),
       messageKey: "element_status",
+      ctx: ctxString,
+      raw,
+      kind: "event",
+    };
+  }
+
+  if (message === "language_select_attempt") {
+    const translation = asText(meta.translation) ?? "Unknown";
+    return {
+      id: rowId,
+      ts,
+      level,
+      title: "Language select",
+      subtitle: translation,
+      details: toDetails([["translation", translation]]),
+      messageKey: "language_select_attempt",
+      ctx: ctxString,
+      raw,
+      kind: "event",
+    };
+  }
+
+  if (message === "language_selected") {
+    const translation = asText(meta.translation) ?? "Unknown";
+    const selected = asText(meta.selected) ?? "true";
+    return {
+      id: rowId,
+      ts,
+      level,
+      title: "Language selected",
+      subtitle: translation,
+      details: toDetails([
+        ["translation", translation],
+        ["selected", selected],
+      ]),
+      messageKey: "language_selected",
+      ctx: ctxString,
+      raw,
+      kind: "event",
+    };
+  }
+
+  if (message === "automation_action") {
+    const action = asText(meta.action) ?? "unknown";
+    return {
+      id: rowId,
+      ts,
+      level,
+      title: "Automation action",
+      subtitle: action,
+      details: toDetails([["action", action]]),
+      messageKey: "automation_action",
       ctx: ctxString,
       raw,
       kind: "event",
@@ -268,7 +324,7 @@ function toDisplayRow(event: LogEvent, index: number): DisplayRow | null {
       id: rowId,
       ts,
       level,
-      title: "Skipped action",
+      title: "Automation skipped",
       subtitle: automationType,
       details: toDetails([
         ["taskId", asText(meta.taskId) ?? asText(ctx.taskId)],
@@ -357,6 +413,7 @@ function buildTaskGroups(rows: DisplayRow[]) {
 
     const current = groups.get(key) ?? {
       key,
+      taskId: undefined,
       fieldName,
       elementId,
       elementName,
@@ -367,6 +424,8 @@ function buildTaskGroups(rows: DisplayRow[]) {
       issues: [],
     };
 
+    const taskId = row.ctx?.taskId ?? detailValue(row, "taskId");
+    current.taskId = current.taskId ?? taskId;
     current.fieldName = current.fieldName ?? fieldName;
     current.elementId = current.elementId ?? elementId;
     current.elementName = current.elementName ?? elementName;
@@ -376,8 +435,45 @@ function buildTaskGroups(rows: DisplayRow[]) {
     const url = detailValue(row, "url") ?? row.subtitle;
     if (!current.url && row.title === "Navigate" && url) current.url = url;
 
-    const action = row.subtitle ? `${row.title} — ${row.subtitle}` : row.title;
-    if (!current.actions.includes(action)) {
+    let action: string | undefined;
+    switch (row.messageKey) {
+      case "navigate":
+        action = `Navigate${current.url ? `: ${current.url}` : ""}`;
+        break;
+      case "element_status": {
+        const status = detailValue(row, "status") ?? row.subtitle ?? "Unknown";
+        action = `Element Status: ${toTitleCase(status)}`;
+        break;
+      }
+      case "language_select_attempt": {
+        const translation =
+          detailValue(row, "translation") ?? row.subtitle ?? "Unknown";
+        action = `Language Select: ${translation}`;
+        break;
+      }
+      case "language_selected": {
+        const selected = (detailValue(row, "selected") ?? "true").toLowerCase();
+        action = `Language Selected: ${selected === "true" ? "Yes" : "No"}`;
+        break;
+      }
+      case "automation_action": {
+        const rowAction =
+          detailValue(row, "action") ?? row.subtitle ?? "unknown";
+        action = `Automation Action: ${rowAction}`;
+        break;
+      }
+      case "automation_action_skipped": {
+        const skipped =
+          detailValue(row, "automationType") ?? row.subtitle ?? "unknown";
+        action = `Automation Skipped: ${skipped}`;
+        break;
+      }
+      default:
+        action = undefined;
+        break;
+    }
+
+    if (action && !current.actions.includes(action)) {
       current.actions.push(action);
     }
 
@@ -603,6 +699,10 @@ export function LogsTerminal({ runId }: LogsTerminalProps) {
                 </div>
                 <div className="mt-1 text-[11px] text-slate-300 space-y-0.5">
                   <div>
+                    <span className="text-slate-500">TASK ID:</span>{" "}
+                    {group.taskId ?? "-"}
+                  </div>
+                  <div>
                     <span className="text-slate-500">FIELD NAME:</span>{" "}
                     {group.fieldName ?? "-"}
                   </div>
@@ -632,9 +732,12 @@ export function LogsTerminal({ runId }: LogsTerminalProps) {
                   <div>
                     <span className="text-slate-500">ACTIONS:</span>
                     {group.actions.length > 0 ? (
-                      <ul className="mt-1 ml-4 list-disc text-slate-200">
+                      <ul className="mt-1 ml-4 list-none text-slate-200">
                         {group.actions.map((action) => (
-                          <li key={action}>{action}</li>
+                          <li key={action}>
+                            <ChevronRight className="inline mr-1 w-3 h-3" />{" "}
+                            {action}
+                          </li>
                         ))}
                       </ul>
                     ) : (
@@ -658,7 +761,7 @@ export function LogsTerminal({ runId }: LogsTerminalProps) {
           </div>
         ) : (
           <div className="text-[11px] text-slate-400 border border-dashed border-slate-700 rounded p-3">
-            No grouped rows yet. Run automation or switch level filter.
+            No grouped rows yet. Run automation to populate logs.
           </div>
         )}
       </div>

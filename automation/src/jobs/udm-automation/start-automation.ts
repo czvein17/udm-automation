@@ -12,6 +12,11 @@ import { editAttributes } from "./edit-attibutes";
 import { reApprove } from "./re-approve";
 import { checkFieldName } from "../../actions/udm-actions/checkFieldName";
 import type { AutomationLogger } from "../../shared/logger";
+import {
+  buildTaskContext,
+  logAction,
+  logFailed,
+} from "../../shared/logger.util";
 
 export const startAutomation = async (
   config: Config,
@@ -49,7 +54,7 @@ export const startAutomation = async (
             elementId,
           );
 
-          const ctx = {
+          const ctx = buildTaskContext({
             taskId: task.id,
             fieldName: task.fieldName,
             elementId: task.elementId,
@@ -58,9 +63,9 @@ export const startAutomation = async (
             tableName: task.tableName,
             surveyline: config.surveyline ?? undefined,
             automationType: config.automationType,
-          };
+          });
 
-          await logger.info("navigate", { url }, ctx);
+          await logAction(logger, "navigate", ctx, { url });
 
           await page.goto(url, { waitUntil: "domcontentloaded" });
 
@@ -69,7 +74,7 @@ export const startAutomation = async (
 
           const status = await getElementStatus(page);
 
-          await logger.debug("element_status", { status }, ctx);
+          await logAction(logger, "element_status", ctx, { status });
           if (status === "approved") {
             await TaskService.createTaskLogs({
               taskId: task.id,
@@ -85,14 +90,10 @@ export const startAutomation = async (
           try {
             const { match, found } = await checkFieldName(page, task.fieldName);
             if (!match) {
-              await logger.info(
-                "field_name_mismatch",
-                {
-                  expected: task.fieldName,
-                  found,
-                },
-                ctx,
-              );
+              await logAction(logger, "field_name_mismatch", ctx, {
+                expected: task.fieldName,
+                found,
+              });
 
               await TaskService.createTaskLogs({
                 taskId: task.id,
@@ -110,11 +111,7 @@ export const startAutomation = async (
 
             console.log("FIELD NAME MATCH");
           } catch (err: any) {
-            await logger.error(
-              "field_name_check_error",
-              { err: String(err) },
-              ctx,
-            );
+            await logFailed(logger, "field_name_check_error", err, ctx);
             await TaskService.createTaskLogs({
               taskId: task.id,
               logs: [
@@ -132,11 +129,9 @@ export const startAutomation = async (
             const translation = String(config.translation ?? "");
             const tl = translation.toLowerCase();
             if (tl !== "english" && tl !== "english (default)") {
-              await logger.info(
-                "language_select_attempt",
-                { translation },
-                ctx,
-              );
+              await logAction(logger, "language_select_attempt", ctx, {
+                translation,
+              });
 
               // attempt a Ctrl+Tab to avoid focus lock, then select language
               try {
@@ -147,13 +142,12 @@ export const startAutomation = async (
 
               try {
                 await selectLanguage(page, translation);
-                await logger.info("language_selected", { translation }, ctx);
+                await logAction(logger, "language_selected", ctx, {
+                  translation,
+                  selected: true,
+                });
               } catch (err: any) {
-                await logger.error(
-                  "language_selection_failed",
-                  { err: String(err) },
-                  ctx,
-                );
+                await logFailed(logger, "language_selection_failed", err, ctx);
               }
 
               // nudge focus forward so automation continues
@@ -165,31 +159,28 @@ export const startAutomation = async (
               }
             }
           } catch (err) {
-            await logger.error(
-              "language_block_error",
-              { err: String(err) },
-              ctx,
-            );
+            await logFailed(logger, "language_block_error", err, ctx);
           }
 
           // Run automation specific action
-          switch (config.automationType) {
+          const automationType = String(config.automationType ?? "")
+            .trim()
+            .toLowerCase();
+
+          switch (automationType) {
+            case "udm:open_elem":
             case "udm:open_open_elem":
-              await logger.info(
-                "automation_action",
-                { action: "open_open_elem" },
-                ctx,
-              );
+              await logAction(logger, "automation_action", ctx, {
+                action: "Open Element",
+              });
 
               console.log("OPENING ELEMENTS");
               break;
 
             case "udm:re-approve":
-              await logger.info(
-                "automation_action",
-                { action: "re-approve" },
-                ctx,
-              );
+              await logAction(logger, "automation_action", ctx, {
+                action: "Re-Approve",
+              });
 
               console.log("RE-APPROVING ELEMENTS");
               await reApprove(page);
@@ -197,37 +188,37 @@ export const startAutomation = async (
               break;
 
             case "udm:edit_attributes":
-              await logger.info(
-                "automation_action",
-                { action: "edit_attributes" },
-                ctx,
-              );
+              await logAction(logger, "automation_action", ctx, {
+                action: "Edit Attributes",
+              });
               await editAttributes(page, task, logger, ctx);
               break;
 
             default:
-              await logger.debug(
+              await logAction(
+                logger,
                 "automation_action_skipped",
-                { automationType: config.automationType },
                 ctx,
+                {
+                  automationType: config.automationType,
+                  reason: "No mapped automation action",
+                },
+                "debug",
               );
               break;
           }
         } catch (err: any) {
-          await logger.error(
-            "task_step_error",
-            { err: String(err) },
-            {
-              taskId: task.id,
-              fieldName: task.fieldName,
-              elementId: task.elementId,
-              elementName: task.elementName ?? undefined,
-              displayName: task.displayName ?? undefined,
-              tableName: task.tableName,
-              surveyline: config.surveyline ?? undefined,
-              automationType: config.automationType,
-            },
-          );
+          const taskCtx = buildTaskContext({
+            taskId: task.id,
+            fieldName: task.fieldName,
+            elementId: task.elementId,
+            elementName: task.elementName ?? undefined,
+            displayName: task.displayName ?? undefined,
+            tableName: task.tableName,
+            surveyline: config.surveyline ?? undefined,
+            automationType: config.automationType,
+          });
+          await logFailed(logger, "task_step_error", err, taskCtx);
           await TaskService.createTaskLogs({
             taskId: task.id,
             logs: [

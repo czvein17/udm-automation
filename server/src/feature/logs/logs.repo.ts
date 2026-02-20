@@ -106,3 +106,11 @@ export async function getLogs(runId: string, cursor?: number, limit = 200) {
     nextCursor,
   };
 }
+
+export async function deleteLogsForRun(runId: string) {
+  await db.delete(automationLogs).where(eq(automationLogs.runId, runId));
+}
+
+export async function deleteAllLogs() {
+  await db.delete(automationLogs);
+}
