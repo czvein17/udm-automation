@@ -61,6 +61,19 @@ export const config = sqliteTable("config", {
   translation: text("translation").notNull().default("English"),
 });
 
+export const automationLogs = sqliteTable("automation_logs", {
+  id: text("id").primaryKey().unique(),
+  runId: text("runId").notNull(),
+  jobId: text("jobId"),
+  runnerId: text("runnerId"),
+  ts: text("ts").notNull(),
+  level: text("level").notNull(),
+  message: text("message").notNull(),
+  metaJson: text("metaJson"),
+  raw: text("raw"),
+  seq: integer("seq").notNull(),
+});
+
 export const configSchema = z.object({
   id: uuid(),
   configFor: z

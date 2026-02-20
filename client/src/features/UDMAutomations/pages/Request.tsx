@@ -2,7 +2,11 @@ import { useState } from "react";
 import { ElementsTab } from "../components/ElementsTab";
 import { AutomationConfigTab } from "../components/AutomationConfigTab";
 
-export const Request = () => {
+type RequestProps = {
+  onSubmittedRunId?: (runId: string) => void;
+};
+
+export const Request = ({ onSubmittedRunId }: RequestProps) => {
   const [activeTab, setActiveTab] = useState<string>("Elements");
 
   const configOptions = ["Elements", "Automation Config", "Auth"];
@@ -38,7 +42,7 @@ export const Request = () => {
         {/* Only THIS inner wrapper scrolls per tab */}
         {activeTab === "Elements" && (
           <div className="h-full min-h-0 bg-[#f8fafc] p-2">
-            <ElementsTab />
+            <ElementsTab onSubmittedRunId={onSubmittedRunId} />
           </div>
         )}
 

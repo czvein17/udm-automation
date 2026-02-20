@@ -2,6 +2,9 @@ import path from "node:path";
 import { spawn } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { appendLog, finishRun } from "../stores/run.store";
+import { parseLogLine } from "@server/feature/logs/logs.parser";
+import { insertLog } from "@server/feature/logs/logs.repo";
+import { broadcastLog } from "@server/feature/logs/logs.ws";
 
 export function runAutomationJob(args: { runId: string; jobId: string }) {
   // resolve repo root relative to this file (robust regardless of process.cwd)
@@ -25,6 +28,24 @@ export function runAutomationJob(args: { runId: string; jobId: string }) {
     for (const line of text.split(/\r?\n/)) {
       if (line.trim()) appendLog(runId, line);
       if (line.trim()) console.log(`[AUTOMATION: ${runId}] ${line}`); // also log to server console
+      if (!line.trim()) continue;
+
+      const trimmed = line.trim();
+      const isStructuredAutomationJson =
+        trimmed.startsWith("{") && trimmed.includes('"tag":"AUTOMATION"');
+      const isLoggerHumanLine = /^(DEBUG|INFO|WARN|ERROR)\s+/.test(trimmed);
+      if (isStructuredAutomationJson || isLoggerHumanLine) continue;
+
+      const event = parseLogLine({
+        line,
+        runId,
+        jobId,
+        runnerId: `server-pid-${process.pid}`,
+      });
+
+      void insertLog(event)
+        .then(() => broadcastLog(event.runId, event))
+        .catch((err) => console.error("Failed to persist automation log", err));
     }
   };
 

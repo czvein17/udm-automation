@@ -1,14 +1,12 @@
 import { createBrowserWithState } from "../../shared/browserWithProfile";
 import { ensureLoggedIn } from "../../shared/auth";
 import { makeLogger } from "../../shared/logger";
-import { cliLog } from "../../shared/cli-log";
+import { createReporter } from "../../shared/reporter";
 
 import { getConfigForService } from "@server/feature/config/config.service";
 import { startAutomation } from "./start-automation";
 
 export async function runUdmAutomation(runId: string) {
-  const logger = makeLogger(runId);
-
   const configSettin = await getConfigForService("udm");
 
   if (!configSettin) {
@@ -21,7 +19,29 @@ export async function runUdmAutomation(runId: string) {
     throw new Error("UDM config baseUrl not found");
   }
 
-  cliLog(runId, "debug", "config", configSettin);
+  const runnerId = `pid-${process.pid}`;
+
+  const report = createReporter({
+    runId,
+    jobId: "udm-automation",
+    runnerId,
+    config: {
+      surveyline: configSettin.surveyline ?? undefined,
+      automationType: configSettin.automationType,
+      translation: configSettin.translation ?? undefined,
+    },
+  });
+
+  const logger = makeLogger({
+    runId,
+    jobId: "udm-automation",
+    runnerId,
+    surveyline: configSettin.surveyline ?? undefined,
+    automationType: configSettin.automationType,
+    translation: configSettin.translation,
+  });
+
+  await report.runStart();
 
   const { browser, context, statePath } = await createBrowserWithState();
   const page = await context.newPage();
@@ -29,16 +49,12 @@ export async function runUdmAutomation(runId: string) {
   try {
     await ensureLoggedIn({ page, context, baseUrl, statePath, logger });
 
-    await startAutomation(configSettin, runId, context);
-
-    // ... your actual automation steps here ...
-    logger.info("🚀 Running UDM automation steps...");
+    await startAutomation(configSettin, runId, context, report);
 
     // save updated cookies at end too
     await context.storageState({ path: statePath });
   } catch (err) {
-    cliLog(runId, "error", "job_error", { err: String(err) });
-    logger.error?.(String(err));
+    await logger.error("run_error", { err: String(err) });
     throw err;
   }
 }

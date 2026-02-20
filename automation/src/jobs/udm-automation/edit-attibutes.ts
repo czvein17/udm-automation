@@ -3,8 +3,13 @@ import { ensureUnlocked } from "../../actions/udm-actions/ensureUnlocked";
 import udmSelector from "../../selectors/udm-selector";
 import type { Task } from "@server/db/schema";
 import { toggleSave } from "../../actions/udm-actions/toggleSaveBtn";
+import type { RowReporter } from "../../shared/reporter";
 
-export const editAttributes = async (page: Page, task: Task) => {
+export const editAttributes = async (
+  page: Page,
+  task: Task,
+  row: RowReporter,
+) => {
   console.log("Attempting to unlcok");
 
   const delayMs = 3000;
@@ -21,6 +26,8 @@ export const editAttributes = async (page: Page, task: Task) => {
   const elemNameSel = udmSelector.attrElemNameInput;
 
   const displayName = task.displayName;
+
+  await row.step("Edit display name", { value: displayName });
 
   await page.fill(elemNameSel, displayName!);
 
