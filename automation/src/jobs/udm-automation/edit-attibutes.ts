@@ -3,13 +3,12 @@ import { ensureUnlocked } from "../../actions/udm-actions/ensureUnlocked";
 import udmSelector from "../../selectors/udm-selector";
 import type { Task } from "@server/db/schema";
 import { toggleSave } from "../../actions/udm-actions/toggleSaveBtn";
-import type { AutomationLogger, LogContext } from "../../shared/logger";
+import type { RowReporter } from "../../shared/reporter";
 
 export const editAttributes = async (
   page: Page,
   task: Task,
-  logger: AutomationLogger,
-  ctx: LogContext,
+  row: RowReporter,
 ) => {
   console.log("Attempting to unlcok");
 
@@ -28,7 +27,7 @@ export const editAttributes = async (
 
   const displayName = task.displayName;
 
-  await logger.info("edit_display_name", { displayName }, ctx);
+  await row.step("Edit display name", { value: displayName });
 
   await page.fill(elemNameSel, displayName!);
 

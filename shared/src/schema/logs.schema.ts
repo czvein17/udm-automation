@@ -9,6 +9,8 @@ export const logContextSchema = z.object({
   elementName: z.string().optional(),
   displayName: z.string().optional(),
   tableName: z.string().optional(),
+  url: z.string().optional(),
+  rowIndex: z.number().int().nonnegative().optional(),
   taskId: z.string().optional(),
   surveyline: z.string().optional(),
   automationType: z.string().optional(),

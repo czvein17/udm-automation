@@ -6,6 +6,8 @@ export type LogContext = {
   elementName?: string;
   displayName?: string;
   tableName?: string;
+  url?: string;
+  rowIndex?: number;
   taskId?: string;
   surveyline?: string;
   automationType?: string;

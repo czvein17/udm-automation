@@ -11,18 +11,18 @@ import { selectLanguage } from "../../actions/udm-actions/selectLanguage";
 import { editAttributes } from "./edit-attibutes";
 import { reApprove } from "./re-approve";
 import { checkFieldName } from "../../actions/udm-actions/checkFieldName";
-import type { AutomationLogger } from "../../shared/logger";
-import {
-  buildTaskContext,
-  logAction,
-  logFailed,
-} from "../../shared/logger.util";
+import type { Reporter } from "../../shared/reporter";
+
+function toTitleCase(value: string) {
+  if (!value) return value;
+  return value.charAt(0).toUpperCase() + value.slice(1).toLowerCase();
+}
 
 export const startAutomation = async (
   config: Config,
   runId: string,
   context: any,
-  logger: AutomationLogger,
+  report: Reporter,
 ) => {
   const taskList = await YTService.getTasksByRunId(runId);
 
@@ -35,8 +35,30 @@ export const startAutomation = async (
     const chunk = taskList.slice(i, i + BATCH_SIZE);
 
     await Promise.all(
-      chunk.map(async (task) => {
+      chunk.map(async (task, chunkIndex) => {
+        const rowIndex = i + chunkIndex + 1;
         const page = await context.newPage();
+
+        const tableName = task.tableName;
+        const elementId = task.elementId;
+
+        const url = buildRecordUrl(
+          `${config.baseUrl!}/${config.surveyline}`,
+          tableName,
+          elementId,
+        );
+
+        const row = report.row({
+          rowIndex,
+          taskId: task.id,
+          fieldName: task.fieldName,
+          elementId: task.elementId,
+          elementName: task.elementName ?? undefined,
+          displayName: task.displayName ?? undefined,
+          tableName: task.tableName,
+          url,
+        });
+
         try {
           await page.bringToFront();
 
@@ -45,27 +67,7 @@ export const startAutomation = async (
             logs: [{ status: "loading", action: "navigate to record" }],
           });
 
-          const tableName = task.tableName;
-          const elementId = task.elementId;
-
-          const url = buildRecordUrl(
-            `${config.baseUrl!}/${config.surveyline}`,
-            tableName,
-            elementId,
-          );
-
-          const ctx = buildTaskContext({
-            taskId: task.id,
-            fieldName: task.fieldName,
-            elementId: task.elementId,
-            elementName: task.elementName ?? undefined,
-            displayName: task.displayName ?? undefined,
-            tableName: task.tableName,
-            surveyline: config.surveyline ?? undefined,
-            automationType: config.automationType,
-          });
-
-          await logAction(logger, "navigate", ctx, { url });
+          await row.step("Navigate", { url });
 
           await page.goto(url, { waitUntil: "domcontentloaded" });
 
@@ -74,7 +76,7 @@ export const startAutomation = async (
 
           const status = await getElementStatus(page);
 
-          await logAction(logger, "element_status", ctx, { status });
+          await row.step("Element status", { status: toTitleCase(status) });
           if (status === "approved") {
             await TaskService.createTaskLogs({
               taskId: task.id,
@@ -90,9 +92,9 @@ export const startAutomation = async (
           try {
             const { match, found } = await checkFieldName(page, task.fieldName);
             if (!match) {
-              await logAction(logger, "field_name_mismatch", ctx, {
-                expected: task.fieldName,
-                found,
+              await row.fail("FIELD_NAME_MISMATCH", {
+                message: `Expected ${task.fieldName}, found ${found ?? "Unknown"}`,
+                hint: "Check task source field mapping",
               });
 
               await TaskService.createTaskLogs({
@@ -111,7 +113,10 @@ export const startAutomation = async (
 
             console.log("FIELD NAME MATCH");
           } catch (err: any) {
-            await logFailed(logger, "field_name_check_error", err, ctx);
+            await row.fail("FIELD_NAME_CHECK_ERROR", {
+              message: err?.message ?? String(err),
+              hint: "Review field-name selector",
+            });
             await TaskService.createTaskLogs({
               taskId: task.id,
               logs: [
@@ -129,9 +134,7 @@ export const startAutomation = async (
             const translation = String(config.translation ?? "");
             const tl = translation.toLowerCase();
             if (tl !== "english" && tl !== "english (default)") {
-              await logAction(logger, "language_select_attempt", ctx, {
-                translation,
-              });
+              await row.step("Language select", { value: translation });
 
               // attempt a Ctrl+Tab to avoid focus lock, then select language
               try {
@@ -142,12 +145,12 @@ export const startAutomation = async (
 
               try {
                 await selectLanguage(page, translation);
-                await logAction(logger, "language_selected", ctx, {
-                  translation,
-                  selected: true,
-                });
+                await row.step("Language selected", { value: translation });
               } catch (err: any) {
-                await logFailed(logger, "language_selection_failed", err, ctx);
+                await row.fail("LANGUAGE_SELECTION_FAILED", {
+                  message: err?.message ?? String(err),
+                  hint: `Target language: ${translation}`,
+                });
               }
 
               // nudge focus forward so automation continues
@@ -159,7 +162,9 @@ export const startAutomation = async (
               }
             }
           } catch (err) {
-            await logFailed(logger, "language_block_error", err, ctx);
+            await row.fail("LANGUAGE_BLOCK_ERROR", {
+              message: err instanceof Error ? err.message : String(err),
+            });
           }
 
           // Run automation specific action
@@ -170,17 +175,13 @@ export const startAutomation = async (
           switch (automationType) {
             case "udm:open_elem":
             case "udm:open_open_elem":
-              await logAction(logger, "automation_action", ctx, {
-                action: "Open Element",
-              });
+              await row.step("Automation action", { action: "Open Element" });
 
               console.log("OPENING ELEMENTS");
               break;
 
             case "udm:re-approve":
-              await logAction(logger, "automation_action", ctx, {
-                action: "Re-Approve",
-              });
+              await row.step("Automation action", { action: "Re-Approve" });
 
               console.log("RE-APPROVING ELEMENTS");
               await reApprove(page);
@@ -188,37 +189,26 @@ export const startAutomation = async (
               break;
 
             case "udm:edit_attributes":
-              await logAction(logger, "automation_action", ctx, {
+              await row.step("Automation action", {
                 action: "Edit Attributes",
               });
-              await editAttributes(page, task, logger, ctx);
+              await editAttributes(page, task, row);
               break;
 
             default:
-              await logAction(
-                logger,
-                "automation_action_skipped",
-                ctx,
-                {
-                  automationType: config.automationType,
-                  reason: "No mapped automation action",
-                },
-                "debug",
-              );
+              await row.warn("Automation skipped", {
+                automationType: config.automationType,
+                reason: "No mapped automation action",
+              });
               break;
           }
+
+          await row.ok("Completed");
         } catch (err: any) {
-          const taskCtx = buildTaskContext({
-            taskId: task.id,
-            fieldName: task.fieldName,
-            elementId: task.elementId,
-            elementName: task.elementName ?? undefined,
-            displayName: task.displayName ?? undefined,
-            tableName: task.tableName,
-            surveyline: config.surveyline ?? undefined,
-            automationType: config.automationType,
+          await row.fail("TASK_STEP_ERROR", {
+            message: err?.message ?? String(err),
+            hint: "See task logs for backend context",
           });
-          await logFailed(logger, "task_step_error", err, taskCtx);
           await TaskService.createTaskLogs({
             taskId: task.id,
             logs: [

@@ -22,12 +22,14 @@ type DisplayRow = {
 type TaskGroup = {
   key: string;
   taskId?: string;
+  rowIndex?: string;
   fieldName?: string;
   elementId?: string;
   elementName?: string;
   displayName?: string;
   tableName?: string;
   url?: string;
+  status?: "ok" | "fail";
   actions: string[];
   issues: string[];
 };
@@ -230,6 +232,100 @@ function toDisplayRow(event: LogEvent, index: number): DisplayRow | null {
     };
   }
 
+  if (message === "run_start") {
+    const config = isObject(meta.config) ? meta.config : {};
+
+    return {
+      id: rowId,
+      ts,
+      level,
+      title: "Run started",
+      details: toDetails([
+        ["jobId", meta.jobId],
+        ["runId", meta.runId],
+        ["runnerId", meta.runnerId],
+        ["ts", meta.ts ?? ts],
+        ["config.surveyline", config.surveyline],
+        ["config.automationType", config.automationType],
+        ["config.translation", config.translation],
+      ]),
+      messageKey: "run_start",
+      ctx: ctxString,
+      raw,
+      kind: "header",
+    };
+  }
+
+  if (message === "row_start") {
+    const rowCtx = isObject(meta.ctx) ? meta.ctx : {};
+    const rowCtxText: Record<string, string> = { ...ctxString };
+
+    for (const [key, value] of Object.entries(rowCtx)) {
+      const text = asText(value);
+      if (text) rowCtxText[key] = text;
+    }
+
+    return {
+      id: rowId,
+      ts,
+      level,
+      title: "Row started",
+      details: toDetails([["rowIndex", meta.rowIndex]]),
+      messageKey: "row_start",
+      ctx: rowCtxText,
+      raw,
+      kind: "event",
+    };
+  }
+
+  if (message === "row_step") {
+    const title = asText(meta.title) ?? "Step";
+    const details = isObject(meta.details)
+      ? toDetails(
+          Object.entries(meta.details).map(
+            ([key, value]) => [key, value] as [string, unknown],
+          ),
+        )
+      : undefined;
+
+    return {
+      id: rowId,
+      ts,
+      level,
+      title,
+      details,
+      messageKey: "row_step",
+      ctx: ctxString,
+      raw,
+      kind: "event",
+    };
+  }
+
+  if (message === "row_end") {
+    const status = asText(meta.status)?.toLowerCase() ?? "ok";
+    const errorObj = isObject(meta.error) ? meta.error : undefined;
+
+    return {
+      id: rowId,
+      ts,
+      level,
+      title: status === "fail" ? "Row failed" : "Row completed",
+      subtitle: asText(meta.summary),
+      details: toDetails([
+        ["rowIndex", meta.rowIndex],
+        ["status", status],
+        ["summary", meta.summary],
+        ["err", errorObj?.message],
+        ["errorCode", errorObj?.code],
+        ["hint", errorObj?.hint],
+      ]),
+      messageKey: "row_end",
+      ctx: ctxString,
+      raw,
+      kind: "event",
+    };
+  }
+
   if (message === "navigate") {
     const url = asText(meta.url);
     return {
@@ -379,8 +475,29 @@ function detailValue(row: DisplayRow, label: string) {
   return row.details?.find((d) => d.label === label)?.value;
 }
 
+function formatActionFromRowStep(row: DisplayRow) {
+  const value = detailValue(row, "value");
+  if (value) return `${row.title}: ${value}`;
+
+  const status = detailValue(row, "status");
+  if (status) return `${row.title}: ${status}`;
+
+  const action = detailValue(row, "action");
+  if (action) return `${row.title}: ${action}`;
+
+  if (!row.details || row.details.length === 0) return row.title;
+
+  const pairs = row.details
+    .filter((item) => item.label !== "rowIndex")
+    .map((item) => `${item.label}: ${item.value}`);
+
+  if (pairs.length === 0) return row.title;
+  return `${row.title}: ${pairs.join(" • ")}`;
+}
+
 function groupKeyForRow(row: DisplayRow) {
   const taskId = row.ctx?.taskId ?? detailValue(row, "taskId");
+  const rowIndex = row.ctx?.rowIndex ?? detailValue(row, "rowIndex");
   const fieldName = row.ctx?.fieldName;
   const elementId = row.ctx?.elementId;
   const elementName = row.ctx?.elementName;
@@ -389,6 +506,7 @@ function groupKeyForRow(row: DisplayRow) {
 
   return (
     taskId ??
+    rowIndex ??
     [fieldName, elementId, elementName, displayName, tableName]
       .filter(Boolean)
       .join("|")
@@ -414,18 +532,22 @@ function buildTaskGroups(rows: DisplayRow[]) {
     const current = groups.get(key) ?? {
       key,
       taskId: undefined,
+      rowIndex: undefined,
       fieldName,
       elementId,
       elementName,
       displayName,
       tableName,
       url: undefined,
+      status: undefined,
       actions: [],
       issues: [],
     };
 
     const taskId = row.ctx?.taskId ?? detailValue(row, "taskId");
+    const rowIndex = row.ctx?.rowIndex ?? detailValue(row, "rowIndex");
     current.taskId = current.taskId ?? taskId;
+    current.rowIndex = current.rowIndex ?? rowIndex;
     current.fieldName = current.fieldName ?? fieldName;
     current.elementId = current.elementId ?? elementId;
     current.elementName = current.elementName ?? elementName;
@@ -437,6 +559,16 @@ function buildTaskGroups(rows: DisplayRow[]) {
 
     let action: string | undefined;
     switch (row.messageKey) {
+      case "row_step":
+        action = formatActionFromRowStep(row);
+        break;
+      case "row_end": {
+        const status = (detailValue(row, "status") ?? "").toLowerCase();
+        if (status === "ok" || status === "fail") {
+          current.status = status;
+        }
+        break;
+      }
       case "navigate":
         action = `Navigate${current.url ? `: ${current.url}` : ""}`;
         break;
@@ -538,6 +670,32 @@ function compactStackTrace(rows: DisplayRow[]) {
 function extractHeaderInfo(rows: DisplayRow[], runId: string): HeaderInfo {
   const info: HeaderInfo = { run: runId };
   for (const row of rows) {
+    if (row.messageKey === "run_start") {
+      const job = detailValue(row, "jobId");
+      const run = detailValue(row, "runId");
+      const runner = detailValue(row, "runnerId");
+      const started = detailValue(row, "ts");
+      const surveyline = detailValue(row, "config.surveyline");
+      const type = detailValue(row, "config.automationType");
+      const lang = detailValue(row, "config.translation");
+
+      info.job = job ?? info.job;
+      info.run = run ?? info.run;
+      info.runner = runner ?? info.runner;
+      info.started = started ?? info.started;
+
+      const configParts = [
+        surveyline ? `surveyline=${surveyline}` : undefined,
+        type ? `type=${type}` : undefined,
+        lang ? `lang=${lang}` : undefined,
+      ].filter(Boolean);
+
+      if (configParts.length > 0) {
+        info.config = configParts.join(" | ");
+      }
+      continue;
+    }
+
     const line = row.title.trim();
     let match: RegExpMatchArray | null = null;
 
@@ -690,11 +848,15 @@ export function LogsTerminal({ runId }: LogsTerminalProps) {
                 className="border border-slate-700 rounded bg-slate-900/40 p-2"
               >
                 <div className="flex items-center gap-2 text-[11px] font-semibold text-slate-100">
-                  <span>Row {index + 1}</span>
+                  <span>Row {group.rowIndex ?? index + 1}</span>
                   <span
-                    className={`px-1.5 py-0.5 rounded text-[10px] ${group.issues.length > 0 ? "bg-rose-700 text-rose-100" : "bg-emerald-700 text-emerald-100"}`}
+                    className={`px-1.5 py-0.5 rounded text-[10px] ${group.status === "fail" || group.issues.length > 0 ? "bg-rose-700 text-rose-100" : group.status === "ok" ? "bg-emerald-700 text-emerald-100" : "bg-slate-700 text-slate-100"}`}
                   >
-                    {group.issues.length > 0 ? "issue" : "ok"}
+                    {group.status === "fail" || group.issues.length > 0
+                      ? "fail"
+                      : group.status === "ok"
+                        ? "ok"
+                        : "running"}
                   </span>
                 </div>
                 <div className="mt-1 text-[11px] text-slate-300 space-y-0.5">
