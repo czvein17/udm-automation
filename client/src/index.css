@@ -55,7 +55,7 @@
   }
 
   .form-input {
-    @apply flex-1 px-3 py-2 text-sm rounded border border-slate-200 bg-white outline-none;
+    @apply flex-1 px-3 py-2 text-sm rounded border border-slate-200 bg-white outline-none focus:ring focus:ring-wtwPrimary focus:border-transparent;
   }
 
   .card-section {

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useGetConfig, useConfigMutations } from "../hooks/useConfigServices";
 import type { CreateConfig } from "shared";
 import { configForValues } from "shared/dist/schema/config.schema";
-type ConfigWithId = CreateConfig & { id?: string };
+type ConfigWithId = CreateConfig & { id?: string; name?: string };
 
 const automationTypes = [
   "udm:open_elem",
@@ -28,6 +28,7 @@ export const AutomationConfigTab = () => {
     () => ({
       configFor: configFor as CreateConfig["configFor"],
       baseUrl: "",
+      name: "",
       surveyline: "",
       automationType: automationTypes[0],
       translation: "English",
@@ -43,6 +44,7 @@ export const AutomationConfigTab = () => {
       setForm({
         configFor: cfg.configFor,
         baseUrl: cfg.baseUrl ?? "",
+        name: cfg.name ?? "",
         surveyline: cfg.surveyline ?? "",
         automationType: cfg.automationType ?? automationTypes[0],
         translation: cfg.translation ?? "English",
@@ -98,11 +100,46 @@ export const AutomationConfigTab = () => {
     }
   };
 
+  const fieldDefs: Array<{
+    key: keyof ConfigWithId;
+    label: string;
+    type: "input" | "select";
+    placeholder?: string;
+    options?: readonly string[] | string[];
+    optionLabel?: (o: string) => string;
+    readonly?: boolean;
+  }> = [
+    { key: "id", label: "ID", type: "input", readonly: true },
+    { key: "name", label: "Name", type: "input", placeholder: "optional" },
+    {
+      key: "baseUrl",
+      label: "Base URL",
+      type: "input",
+      placeholder: "https://...",
+    },
+    {
+      key: "surveyline",
+      label: "Surveyline",
+      type: "input",
+      placeholder: "optional",
+    },
+    {
+      key: "automationType",
+      label: "Automation Type",
+      type: "select",
+      options: automationTypes as unknown as string[],
+      optionLabel: (t: string) => automationTypeLabels[t] ?? t,
+    },
+    { key: "translation", label: "Translation", type: "input" },
+  ];
+
   return (
     <div className="h-full min-h-0 p-3">
       <div className="flex items-center gap-3 mb-3">
         <label className="text-xs text-slate-600">Config for</label>
         <select
+          id="configFor"
+          name="configFor"
           value={configFor}
           onChange={(e) => setConfigFor(e.target.value)}
           className="form-input"
@@ -128,54 +165,55 @@ export const AutomationConfigTab = () => {
         </div>
       </div>
 
-      <div className="form-row">
-        <label className="form-label">Base URL</label>
-        <input
-          className="form-input"
-          value={form.baseUrl ?? ""}
-          onChange={(e) => onChange("baseUrl", e.target.value)}
-          placeholder="https://..."
-        />
-      </div>
-
-      <div className="form-row">
-        <label className="form-label">Surveyline</label>
-        <input
-          className="form-input"
-          value={form.surveyline ?? ""}
-          onChange={(e) => onChange("surveyline", e.target.value)}
-          placeholder="optional"
-        />
-      </div>
-
-      <div className="form-row">
-        <label className="form-label">Automation Type</label>
-        <select
-          className="form-input"
-          value={(form.automationType as string) ?? automationTypes[0]}
-          onChange={(e) =>
-            onChange(
-              "automationType",
-              e.target.value as CreateConfig["automationType"],
-            )
-          }
-        >
-          {automationTypes.map((t) => (
-            <option key={t} value={t}>
-              {automationTypeLabels[t] ?? t}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      <div className="form-row">
-        <label className="form-label">Translation</label>
-        <input
-          className="form-input"
-          value={form.translation ?? "English"}
-          onChange={(e) => onChange("translation", e.target.value)}
-        />
-      </div>
+      {fieldDefs.map((f) => (
+        <div className="form-row" key={String(f.key)}>
+          <label className="form-label">{f.label}</label>
+          {f.type === "input" ? (
+            <input
+              id={`field-${String(f.key)}`}
+              name={String(f.key)}
+              className="form-input"
+              value={
+                (form as unknown as Record<string, string | undefined>)[
+                  f.key as string
+                ] ?? (f.key === "translation" ? "English" : "")
+              }
+              onChange={(e) =>
+                onChange(
+                  f.key,
+                  e.target.value as unknown as ConfigWithId[keyof ConfigWithId],
+                )
+              }
+              disabled={!!f.readonly}
+              readOnly={!!f.readonly}
+              placeholder={f.placeholder}
+            />
+          ) : (
+            <select
+              id={`field-${String(f.key)}`}
+              name={String(f.key)}
+              className="form-input"
+              value={
+                (form as unknown as Record<string, string | undefined>)[
+                  f.key as string
+                ] ?? automationTypes[0]
+              }
+              onChange={(e) =>
+                onChange(
+                  f.key,
+                  e.target.value as unknown as ConfigWithId[keyof ConfigWithId],
+                )
+              }
+            >
+              {f.options?.map((opt) => (
+                <option key={opt} value={opt}>
+                  {f.optionLabel ? f.optionLabel(opt) : opt}
+                </option>
+              ))}
+            </select>
+          )}
+        </div>
+      ))}
 
       <div className="form-actions">
         <button className="btn btn-primary" onClick={onSave}>
