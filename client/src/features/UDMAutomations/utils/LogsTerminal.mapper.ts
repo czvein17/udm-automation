@@ -16,7 +16,7 @@ export type DisplayRow = {
 export type TaskGroup = {
   key: string;
   taskId?: string;
-  rowIndex?: string;
+  rowIndex: number;
   fieldName?: string;
   elementId?: string;
   elementName?: string;
@@ -465,10 +465,32 @@ function groupKeyForRow(row: DisplayRow) {
   );
 }
 
+function toRowIndex(value?: string) {
+  if (!value) return undefined;
+  const parsed = Number.parseInt(value, 10);
+  if (!Number.isFinite(parsed) || parsed < 1) return undefined;
+  return parsed;
+}
+
 function buildTaskGroups(rows: DisplayRow[]) {
   const groups = new Map<string, TaskGroup>();
+  const actionSets = new Map<string, Set<string>>();
+  const issueSets = new Map<string, Set<string>>();
+  const globalIssueSet = new Set<string>();
+  const globalIssues: string[] = [];
+  let nextFallbackRowIndex = 1;
 
   for (const row of rows) {
+    if (row.level === "error" && !groupKeyForRow(row)) {
+      const issue = sanitizeIssueText(
+        detailValue(row, "err") ?? row.subtitle ?? row.title,
+      );
+      if (issue && !globalIssueSet.has(issue)) {
+        globalIssueSet.add(issue);
+        globalIssues.push(issue);
+      }
+    }
+
     if (row.kind !== "event") continue;
 
     const fieldName = row.ctx?.fieldName;
@@ -481,10 +503,13 @@ function buildTaskGroups(rows: DisplayRow[]) {
 
     if (!key) continue;
 
+    const parsedRowIndex =
+      toRowIndex(row.ctx?.rowIndex) ?? toRowIndex(detailValue(row, "rowIndex"));
+
     const current = groups.get(key) ?? {
       key,
       taskId: undefined,
-      rowIndex: undefined,
+      rowIndex: parsedRowIndex ?? nextFallbackRowIndex,
       fieldName,
       elementId,
       elementName,
@@ -496,10 +521,21 @@ function buildTaskGroups(rows: DisplayRow[]) {
       issues: [],
     };
 
+    if (!groups.has(key) && parsedRowIndex === undefined) {
+      nextFallbackRowIndex += 1;
+    }
+
+    const actionSet = actionSets.get(key) ?? new Set<string>();
+    const issueSet = issueSets.get(key) ?? new Set<string>();
+    actionSets.set(key, actionSet);
+    issueSets.set(key, issueSet);
+
     const taskId = row.ctx?.taskId ?? detailValue(row, "taskId");
-    const rowIndex = row.ctx?.rowIndex ?? detailValue(row, "rowIndex");
+    const rowIndex = parsedRowIndex;
     current.taskId = current.taskId ?? taskId;
-    current.rowIndex = current.rowIndex ?? rowIndex;
+    if (rowIndex !== undefined) {
+      current.rowIndex = rowIndex;
+    }
     current.fieldName = current.fieldName ?? fieldName;
     current.elementId = current.elementId ?? elementId;
     current.elementName = current.elementName ?? elementName;
@@ -557,7 +593,8 @@ function buildTaskGroups(rows: DisplayRow[]) {
         break;
     }
 
-    if (action && !current.actions.includes(action)) {
+    if (action && !actionSet.has(action)) {
+      actionSet.add(action);
       current.actions.push(action);
     }
 
@@ -565,7 +602,8 @@ function buildTaskGroups(rows: DisplayRow[]) {
       const issue = sanitizeIssueText(
         detailValue(row, "err") ?? row.subtitle ?? row.title,
       );
-      if (issue && !current.issues.includes(issue)) {
+      if (issue && !issueSet.has(issue)) {
+        issueSet.add(issue);
         current.issues.push(issue);
       }
     }
@@ -573,21 +611,7 @@ function buildTaskGroups(rows: DisplayRow[]) {
     groups.set(key, current);
   }
 
-  return Array.from(groups.values());
-}
-
-function buildGlobalIssues(rows: DisplayRow[]) {
-  const issues: string[] = [];
-  for (const row of rows) {
-    if (row.level !== "error") continue;
-    if (groupKeyForRow(row)) continue;
-    const issue = sanitizeIssueText(
-      detailValue(row, "err") ?? row.subtitle ?? row.title,
-    );
-    if (!issue) continue;
-    if (!issues.includes(issue)) issues.push(issue);
-  }
-  return issues;
+  return { groups: Array.from(groups.values()), globalIssues };
 }
 
 function compactStackTrace(rows: DisplayRow[]) {
@@ -699,8 +723,7 @@ export function buildLogsDisplayModel(
     (row) => row.kind !== "header" && row.kind !== "noise",
   );
 
-  const groups = buildTaskGroups(rows);
-  const globalIssues = buildGlobalIssues(rows);
+  const { groups, globalIssues } = buildTaskGroups(rows);
 
   return { header, groups, globalIssues };
 }

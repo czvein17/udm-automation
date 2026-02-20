@@ -4,7 +4,7 @@ export type LogsWsMessage =
   | { event: "logs:batch"; data: LogEvent[] }
   | { event: "logs:line"; data: LogEvent };
 
-export const MAX_EVENTS = 5000;
+export const MAX_EVENTS = 100000;
 export const MAX_RETRIES = 5;
 
 export function capEvents(items: LogEvent[]) {

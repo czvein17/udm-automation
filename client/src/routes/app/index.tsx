@@ -13,7 +13,7 @@ function RouteComponent() {
 
   return (
     <div className="p-8">
-      <div className="grid grid-cols-[1fr_1fr] grid-rows-[auto_1fr] gap-3 max-w-8xl mx-auto h-[calc(100vh-160px)]">
+      <div className="grid grid-cols-[2.2fr_1.5fr] grid-rows-[auto_1fr] gap-3 max-w-8xl mx-auto h-[calc(100vh-160px)]">
         <div className="col-span-2 card h-24">First: spans two columns</div>
         <Request onSubmittedRunId={setRunId} />
         <div className="card overflow-hidden min-h-0">

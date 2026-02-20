@@ -18,6 +18,9 @@ export const db = drizzle(client);
 // Ensure tasks table exists (useful for local file DBs)
 void (async () => {
   try {
+    await (client as any).execute(`PRAGMA journal_mode = WAL;`);
+    await (client as any).execute(`PRAGMA busy_timeout = 5000;`);
+
     await (client as any).execute(`
       CREATE TABLE IF NOT EXISTS tasks (
         id TEXT PRIMARY KEY,

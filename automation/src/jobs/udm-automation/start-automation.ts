@@ -12,47 +12,11 @@ import { editAttributes } from "./edit-attibutes";
 import { reApprove } from "./re-approve";
 import { checkFieldName } from "../../actions/udm-actions/checkFieldName";
 import type { Reporter } from "../../shared/reporter";
-
-function toTitleCase(value: string) {
-  if (!value) return value;
-  return value.charAt(0).toUpperCase() + value.slice(1).toLowerCase();
-}
-
-function toUserErrorMessage(error: unknown) {
-  const message =
-    error instanceof Error
-      ? error.message
-      : typeof error === "string"
-        ? error
-        : String(error);
-
-  if (/failed query:/i.test(message)) {
-    return "Task log storage failed while processing this row.";
-  }
-
-  if (/sqlite_busy|database is locked/i.test(message)) {
-    return "Database is busy. Please try again.";
-  }
-
-  return message;
-}
-
-async function appendTaskLog(
-  taskId: string,
-  logs: {
-    status: "success" | "loading" | "failed" | "error";
-    action: string;
-  }[],
-) {
-  try {
-    await TaskService.createTaskLogs({ taskId, logs });
-  } catch (error) {
-    console.warn("Task log write failed", {
-      taskId,
-      err: toUserErrorMessage(error),
-    });
-  }
-}
+import {
+  appendTaskLog,
+  toTitleCase,
+  toUserErrorMessage,
+} from "../../util/logging.util";
 
 export const startAutomation = async (
   config: Config,
