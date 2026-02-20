@@ -85,6 +85,7 @@ export function useLogsStream(runId: string, initialLimit = 200) {
 
     ws.onmessage = (event) => {
       const payload = parseWsMessage(String(event.data));
+
       if (!payload) {
         console.error("Failed to parse ws message", event.data);
         return;
@@ -93,6 +94,7 @@ export function useLogsStream(runId: string, initialLimit = 200) {
         pushBatch(payload.data);
         return;
       }
+
       if (payload.event === "logs:line") {
         pushOne(payload.data);
       }

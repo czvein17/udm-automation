@@ -18,6 +18,42 @@ function toTitleCase(value: string) {
   return value.charAt(0).toUpperCase() + value.slice(1).toLowerCase();
 }
 
+function toUserErrorMessage(error: unknown) {
+  const message =
+    error instanceof Error
+      ? error.message
+      : typeof error === "string"
+        ? error
+        : String(error);
+
+  if (/failed query:/i.test(message)) {
+    return "Task log storage failed while processing this row.";
+  }
+
+  if (/sqlite_busy|database is locked/i.test(message)) {
+    return "Database is busy. Please try again.";
+  }
+
+  return message;
+}
+
+async function appendTaskLog(
+  taskId: string,
+  logs: {
+    status: "success" | "loading" | "failed" | "error";
+    action: string;
+  }[],
+) {
+  try {
+    await TaskService.createTaskLogs({ taskId, logs });
+  } catch (error) {
+    console.warn("Task log write failed", {
+      taskId,
+      err: toUserErrorMessage(error),
+    });
+  }
+}
+
 export const startAutomation = async (
   config: Config,
   runId: string,
@@ -62,10 +98,9 @@ export const startAutomation = async (
         try {
           await page.bringToFront();
 
-          await TaskService.createTaskLogs({
-            taskId: task.id,
-            logs: [{ status: "loading", action: "navigate to record" }],
-          });
+          await appendTaskLog(task.id, [
+            { status: "loading", action: "navigate to record" },
+          ]);
 
           await row.step("Navigate", { url });
 
@@ -78,15 +113,13 @@ export const startAutomation = async (
 
           await row.step("Element status", { status: toTitleCase(status) });
           if (status === "approved") {
-            await TaskService.createTaskLogs({
-              taskId: task.id,
-              logs: [{ status: "success", action: "Element Approve " }],
-            });
+            await appendTaskLog(task.id, [
+              { status: "success", action: "Element Approve " },
+            ]);
           } else {
-            await TaskService.createTaskLogs({
-              taskId: task.id,
-              logs: [{ status: "failed", action: "element not approved" }],
-            });
+            await appendTaskLog(task.id, [
+              { status: "failed", action: "element not approved" },
+            ]);
           }
           // CHECK: If the field name on the page doesn't match the task.fieldName, skip this task.
           try {
@@ -97,15 +130,12 @@ export const startAutomation = async (
                 hint: "Check task source field mapping",
               });
 
-              await TaskService.createTaskLogs({
-                taskId: task.id,
-                logs: [
-                  {
-                    status: "failed",
-                    action: `field name mismatch expected:${task.fieldName} found:${found}`,
-                  },
-                ],
-              });
+              await appendTaskLog(task.id, [
+                {
+                  status: "failed",
+                  action: `field name mismatch expected:${task.fieldName} found:${found}`,
+                },
+              ]);
 
               // skip further automation for this task
               return;
@@ -117,15 +147,12 @@ export const startAutomation = async (
               message: err?.message ?? String(err),
               hint: "Review field-name selector",
             });
-            await TaskService.createTaskLogs({
-              taskId: task.id,
-              logs: [
-                {
-                  status: "failed",
-                  action: `field name check error: ${err?.message ?? err}`,
-                },
-              ],
-            });
+            await appendTaskLog(task.id, [
+              {
+                status: "failed",
+                action: `field name check error: ${toUserErrorMessage(err)}`,
+              },
+            ]);
             return;
           }
 
@@ -206,15 +233,12 @@ export const startAutomation = async (
           await row.ok("Completed");
         } catch (err: any) {
           await row.fail("TASK_STEP_ERROR", {
-            message: err?.message ?? String(err),
+            message: toUserErrorMessage(err),
             hint: "See task logs for backend context",
           });
-          await TaskService.createTaskLogs({
-            taskId: task.id,
-            logs: [
-              { status: "failed", action: `error: ${err?.message ?? err}` },
-            ],
-          });
+          await appendTaskLog(task.id, [
+            { status: "failed", action: `error: ${toUserErrorMessage(err)}` },
+          ]);
         }
       }),
     );

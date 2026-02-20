@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef } from "react";
 import { ChevronRight } from "lucide-react";
 import { useLogsStream } from "../hooks/useLogsStream";
-import { buildLogsDisplayModel } from "./LogsTerminal.mapper";
+import { buildLogsDisplayModel } from "../utils/LogsTerminal.mapper";
 
 type LogsTerminalProps = {
   runId: string;
@@ -15,8 +15,11 @@ export function LogsTerminal({ runId }: LogsTerminalProps) {
 
   useEffect(() => {
     if (!autoScroll) return;
+
     const el = listRef.current;
+
     if (!el) return;
+
     el.scrollTop = el.scrollHeight;
   }, [autoScroll, items.length]);
 
@@ -157,6 +160,7 @@ export function LogsTerminal({ runId }: LogsTerminalProps) {
                       "-"
                     )}
                   </div>
+
                   <div>
                     <span className="text-slate-500">ACTIONS:</span>
                     {group.actions.length > 0 ? (

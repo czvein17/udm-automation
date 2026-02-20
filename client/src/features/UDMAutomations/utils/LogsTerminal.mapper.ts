@@ -116,6 +116,27 @@ function formatActionFromRowStep(row: DisplayRow) {
   return `${row.title}: ${pairs.join(" • ")}`;
 }
 
+function sanitizeIssueText(issue?: string) {
+  if (!issue) return undefined;
+
+  const trimmed = issue.trim();
+  if (!trimmed) return undefined;
+
+  if (/failed query:/i.test(trimmed)) {
+    return "Task log storage failed while processing this row.";
+  }
+
+  if (/sqlite_busy|database is locked/i.test(trimmed)) {
+    return "Database is busy. Please try again.";
+  }
+
+  if (/^\[[0-9:]{8}\]\s+ERROR\s+/i.test(trimmed)) {
+    return trimmed.replace(/^\[[0-9:]{8}\]\s+ERROR\s+/i, "");
+  }
+
+  return trimmed;
+}
+
 function toDisplayRow(event: LogEvent, index: number): DisplayRow | null {
   const msgJson = safeJsonParse<Record<string, unknown>>(event.message);
   const rawJson = safeJsonParse<Record<string, unknown>>(event.raw);
@@ -541,7 +562,9 @@ function buildTaskGroups(rows: DisplayRow[]) {
     }
 
     if (row.level === "error") {
-      const issue = detailValue(row, "err") ?? row.subtitle ?? row.title;
+      const issue = sanitizeIssueText(
+        detailValue(row, "err") ?? row.subtitle ?? row.title,
+      );
       if (issue && !current.issues.includes(issue)) {
         current.issues.push(issue);
       }
@@ -558,7 +581,9 @@ function buildGlobalIssues(rows: DisplayRow[]) {
   for (const row of rows) {
     if (row.level !== "error") continue;
     if (groupKeyForRow(row)) continue;
-    const issue = detailValue(row, "err") ?? row.subtitle ?? row.title;
+    const issue = sanitizeIssueText(
+      detailValue(row, "err") ?? row.subtitle ?? row.title,
+    );
     if (!issue) continue;
     if (!issues.includes(issue)) issues.push(issue);
   }
