@@ -8,7 +8,7 @@ type Props = {
 export function ElementsTable({ table }: Props) {
   return (
     <div className="flex-1 min-h-0 bg-white border rounded-lg shadow-xs border-slate-200 flex flex-col">
-      <div className="shrink-0 bg-white">
+      <div className="shrink-0">
         <table className="w-full border-collapse table-fixed">
           <thead>
             {table.getHeaderGroups().map((hg) => (
@@ -22,8 +22,8 @@ export function ElementsTable({ table }: Props) {
                       key={header.id}
                       className={[
                         "px-2 py-2 text-left text-xs font-semibold text-slate-600 tracking-wide",
-                        isFirstCol ? "pl-42190" : "",
-                        isLastCol ? "pr-410" : "",
+                        isFirstCol ? "pl-4 w-10" : "",
+                        isLastCol ? "pr-4 w-10" : "",
                       ].join(" ")}
                     >
                       {flexRender(
@@ -51,8 +51,8 @@ export function ElementsTable({ table }: Props) {
                     const isLastCol = colIndex === cells.length - 1;
                     const cls = [
                       "px-2 py-2 ",
-                      isFirstCol ? "pl-4" : "",
-                      isLastCol ? "pr-6 py-3" : "",
+                      isFirstCol ? "pl-4 w-10" : "",
+                      isLastCol ? "pr-4 w-10 py-3" : "",
                       "align-top",
                     ]
                       .filter(Boolean)

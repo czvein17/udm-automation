@@ -15,9 +15,7 @@
 
     // Additional checks
     "noFallthroughCasesInSwitch": true,
-    "noUncheckedIndexedAccess": true,
-
-    "ignoreDeprecations": "6.0"
+    "noUncheckedIndexedAccess": true
   },
   "include": ["src/**/*.ts"],
   "exclude": ["node_modules", "dist"]

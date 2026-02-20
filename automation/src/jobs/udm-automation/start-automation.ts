@@ -167,15 +167,15 @@ export const startAutomation = async (
             case "udm:open_elem":
             case "udm:open_open_elem":
               await row.step("Automation action", { action: "Open Element" });
-
               console.log("OPENING ELEMENTS");
+
               break;
 
             case "udm:re-approve":
               await row.step("Automation action", { action: "Re-Approve" });
-
               console.log("RE-APPROVING ELEMENTS");
-              await reApprove(page);
+
+              await reApprove(page, row);
 
               break;
 
