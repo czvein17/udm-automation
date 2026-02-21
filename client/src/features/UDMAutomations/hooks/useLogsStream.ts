@@ -48,7 +48,7 @@ export function useLogsStream(runId: string, initialLimit = 200) {
     inFlightCursorRef.current = null;
 
     const res = await fetch(
-      `/api/v1/runs/${encodeURIComponent(runId)}/logs?limit=${encodeURIComponent(String(initialLimit))}`,
+      `/api/v1/reporter/runs/${encodeURIComponent(runId)}/events?limit=${encodeURIComponent(String(initialLimit))}`,
     );
 
     if (!res.ok) throw new Error("Failed to load logs");
@@ -73,7 +73,7 @@ export function useLogsStream(runId: string, initialLimit = 200) {
 
     try {
       const res = await fetch(
-        `/api/v1/runs/${encodeURIComponent(runId)}/logs?limit=${encodeURIComponent(String(initialLimit))}&cursor=${encodeURIComponent(String(nextCursor))}`,
+        `/api/v1/reporter/runs/${encodeURIComponent(runId)}/events?limit=${encodeURIComponent(String(initialLimit))}&cursor=${encodeURIComponent(String(nextCursor))}`,
       );
 
       if (!res.ok) throw new Error("Failed to load older logs");
@@ -127,12 +127,12 @@ export function useLogsStream(runId: string, initialLimit = 200) {
         console.error("Failed to parse ws message", event.data);
         return;
       }
-      if (payload.event === "logs:batch") {
+      if (payload.event === "reporter:batch") {
         pushBatch(payload.data);
         return;
       }
 
-      if (payload.event === "logs:line") {
+      if (payload.event === "reporter:line") {
         pushOne(payload.data);
       }
     };

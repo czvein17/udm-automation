@@ -5,19 +5,19 @@ import { tasks, type Task } from "@server/db/schema";
 import { taskSchema } from "@server/db/schema";
 import type { ApiResponse } from "shared/dist";
 
-import { startOpenYoutubeRun } from "./youtube.service";
+import { startAutomationRun } from "./automation.service";
 
-import * as ytService from "./youtube.service";
+import * as automationService from "./automation.service";
 
-export async function openYoutube(c: Context) {
+export async function openAutomation(c: Context) {
   const payload = await c.req.json();
 
   const result: {
     runId: string;
-  } = await startOpenYoutubeRun(payload);
+  } = await startAutomationRun(payload);
 
   const data: ApiResponse<{ runId: string }> = {
-    message: "YouTube run started successfully",
+    message: "Automation run started successfully",
     success: true,
     data: result,
   };
@@ -25,15 +25,15 @@ export async function openYoutube(c: Context) {
   return c.json(data, { status: 200 });
 }
 
-export async function openYoutubeMultiple(c: Context) {
+export async function openAutomationMultiple(c: Context) {
   const payload = await c.req.json();
 
   const results: {
     runId: string;
-  } = await ytService.openYtTabsMultiple(payload);
+  } = await automationService.openAutomationMultiple(payload);
 
   const data: ApiResponse<{ runId: string }> = {
-    message: "YouTube multiple tabs run started successfully",
+    message: "Automation run started successfully",
     success: true,
     data: results,
   };
@@ -43,7 +43,7 @@ export async function openYoutubeMultiple(c: Context) {
 
 export async function getTaskList(c: Context) {
   const runId = c.req.param("runId");
-  const result: Task[] = await ytService.getTasksByRunId(runId);
+  const result: Task[] = await automationService.getTasksByRunId(runId);
 
   const data: ApiResponse<Task[]> = {
     message: "Tasks retrieved successfully",
@@ -70,7 +70,7 @@ export async function getTaskByRunID(c: Context) {
   const runId = c.req.param("runId");
 
   type TTask = Task | null;
-  const task: TTask = await ytService.getTaskByRunId(runId);
+  const task: TTask = await automationService.getTaskByRunId(runId);
 
   if (!task) {
     const data: ApiResponse<TTask> = {
@@ -95,7 +95,7 @@ export async function createTask(c: Context) {
 
   type TTask = Task | null;
 
-  const task: TTask = await ytService.createTask(payload);
+  const task: TTask = await automationService.createTask(payload);
 
   const data: ApiResponse<TTask> = {
     message: "Task created successfully",

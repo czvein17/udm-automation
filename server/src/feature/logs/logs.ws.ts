@@ -7,20 +7,20 @@ type LogSocket = WSContext<unknown>;
 const rooms = new Map<string, Set<LogSocket>>();
 
 function roomForRun(runId: string) {
-  return `logs:${runId}`;
+  return `reporter:${runId}`;
 }
 
-export async function connectLogsRoom(runId: string, ws: LogSocket) {
+export async function connectReporterRoom(runId: string, ws: LogSocket) {
   const roomId = roomForRun(runId);
   const sockets = rooms.get(roomId) ?? new Set<LogSocket>();
   sockets.add(ws);
   rooms.set(roomId, sockets);
 
   const initial = await getLogs(runId, undefined, 100);
-  ws.send(JSON.stringify({ event: "logs:batch", data: initial.items }));
+  ws.send(JSON.stringify({ event: "reporter:batch", data: initial.items }));
 }
 
-export function disconnectLogsRoom(runId: string, ws: LogSocket) {
+export function disconnectReporterRoom(runId: string, ws: LogSocket) {
   const roomId = roomForRun(runId);
   const sockets = rooms.get(roomId);
   if (!sockets) return;
@@ -29,12 +29,12 @@ export function disconnectLogsRoom(runId: string, ws: LogSocket) {
   if (sockets.size === 0) rooms.delete(roomId);
 }
 
-export function broadcastLog(runId: string, event: LogEvent) {
+export function broadcastReporterEvent(runId: string, event: LogEvent) {
   const roomId = roomForRun(runId);
   const sockets = rooms.get(roomId);
   if (!sockets || sockets.size === 0) return;
 
-  const msg = JSON.stringify({ event: "logs:line", data: event });
+  const msg = JSON.stringify({ event: "reporter:line", data: event });
   for (const ws of sockets) {
     ws.send(msg);
   }

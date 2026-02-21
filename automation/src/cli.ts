@@ -11,14 +11,10 @@ dotenv.config({ path: path.resolve(repoRoot, ".env") });
 // set a friendly process title so the runtime is easier to identify in process lists
 process.title = "udm-automation-worker";
 
-import { runOpenYoutube } from "./jobs/open-youtube";
-import { runMultipleYtTabs } from "./jobs/open-multiple";
 import { runUdmAutomation } from "./jobs/udm-automation";
 import { makeLogger } from "./shared/logger";
 
 const jobRegistry = {
-  "open-youtube": (runId: string) => runOpenYoutube(runId),
-  "open-youtube-multiple": (runId: string) => runMultipleYtTabs(runId),
   "udm-automation": (runId: string) => runUdmAutomation(runId),
   // "re-approve": runReApprove,
   // "re-approve translation": runReApproveTranslation,

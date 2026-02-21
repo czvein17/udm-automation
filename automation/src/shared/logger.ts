@@ -113,7 +113,7 @@ async function emit(
   else console.log(line);
 
   await fetch(
-    `${apiBaseUrl()}/api/v1/runs/${encodeURIComponent(base.runId)}/logs`,
+    `${apiBaseUrl()}/api/v1/reporter/runs/${encodeURIComponent(base.runId)}/events`,
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },

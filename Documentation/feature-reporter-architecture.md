@@ -48,9 +48,9 @@ Reporter events are discriminated by `type`:
 
 `createReporter.row(...).step(...)`
 → `transport.info("row_step", meta=<row_step>, ctx=<row ctx>)`
-→ `POST /api/v1/runs/:runId/logs`
+→ `POST /api/v1/reporter/runs/:runId/events`
 → `server parse + insert`
-→ `ws logs:line`
+→ `ws reporter:line`
 → `useLogsStream pushOne/pushBatch`
 → `buildLogsDisplayModel`
 → `Row card ACTIONS`

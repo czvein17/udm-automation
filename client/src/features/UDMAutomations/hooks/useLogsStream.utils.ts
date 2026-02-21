@@ -1,8 +1,8 @@
 import type { LogEvent } from "shared";
 
 export type LogsWsMessage =
-  | { event: "logs:batch"; data: LogEvent[] }
-  | { event: "logs:line"; data: LogEvent };
+  | { event: "reporter:batch"; data: LogEvent[] }
+  | { event: "reporter:line"; data: LogEvent };
 
 export const MAX_EVENTS = 100000;
 export const MAX_RETRIES = 5;
@@ -27,7 +27,7 @@ export function wsUrlForRun(runId: string, httpBaseUrl: string) {
   const wsBase = httpBaseUrl
     .replace(/^http:/i, "ws:")
     .replace(/^https:/i, "wss:");
-  return `${wsBase}/ws/logs/${encodeURIComponent(runId)}`;
+  return `${wsBase}/ws/reporter/${encodeURIComponent(runId)}`;
 }
 
 export function reconnectDelayMs(retryCount: number) {
@@ -37,10 +37,10 @@ export function reconnectDelayMs(retryCount: number) {
 export function parseWsMessage(rawData: string): LogsWsMessage | null {
   try {
     const payload = JSON.parse(rawData) as LogsWsMessage;
-    if (payload.event === "logs:batch" && Array.isArray(payload.data)) {
+    if (payload.event === "reporter:batch" && Array.isArray(payload.data)) {
       return payload;
     }
-    if (payload.event === "logs:line" && payload.data) {
+    if (payload.event === "reporter:line" && payload.data) {
       return payload;
     }
     return null;
