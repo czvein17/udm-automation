@@ -9,7 +9,7 @@ export const Sidebar = () => {
       icon: Monitor,
     },
     {
-      linkTo: "/app/automate",
+      linkTo: "/app/udm-execution-history",
       label: "Execution History",
       icon: History,
     },

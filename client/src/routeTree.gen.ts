@@ -12,9 +12,9 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as AppRouteImport } from './routes/app'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppIndexRouteImport } from './routes/app/index'
+import { Route as AppUdmExecutionHistoryRouteImport } from './routes/app/udm-execution-history'
 import { Route as AppSettingsRouteImport } from './routes/app/settings'
 import { Route as AppPreviewRouteImport } from './routes/app/preview'
-import { Route as AppAutomateRouteImport } from './routes/app/automate'
 
 const AppRoute = AppRouteImport.update({
   id: '/app',
@@ -31,6 +31,11 @@ const AppIndexRoute = AppIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AppRoute,
 } as any)
+const AppUdmExecutionHistoryRoute = AppUdmExecutionHistoryRouteImport.update({
+  id: '/udm-execution-history',
+  path: '/udm-execution-history',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppSettingsRoute = AppSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
@@ -41,34 +46,29 @@ const AppPreviewRoute = AppPreviewRouteImport.update({
   path: '/preview',
   getParentRoute: () => AppRoute,
 } as any)
-const AppAutomateRoute = AppAutomateRouteImport.update({
-  id: '/automate',
-  path: '/automate',
-  getParentRoute: () => AppRoute,
-} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/app': typeof AppRouteWithChildren
-  '/app/automate': typeof AppAutomateRoute
   '/app/preview': typeof AppPreviewRoute
   '/app/settings': typeof AppSettingsRoute
+  '/app/udm-execution-history': typeof AppUdmExecutionHistoryRoute
   '/app/': typeof AppIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/app/automate': typeof AppAutomateRoute
   '/app/preview': typeof AppPreviewRoute
   '/app/settings': typeof AppSettingsRoute
+  '/app/udm-execution-history': typeof AppUdmExecutionHistoryRoute
   '/app': typeof AppIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/app': typeof AppRouteWithChildren
-  '/app/automate': typeof AppAutomateRoute
   '/app/preview': typeof AppPreviewRoute
   '/app/settings': typeof AppSettingsRoute
+  '/app/udm-execution-history': typeof AppUdmExecutionHistoryRoute
   '/app/': typeof AppIndexRoute
 }
 export interface FileRouteTypes {
@@ -76,19 +76,24 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/app'
-    | '/app/automate'
     | '/app/preview'
     | '/app/settings'
+    | '/app/udm-execution-history'
     | '/app/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/app/automate' | '/app/preview' | '/app/settings' | '/app'
+  to:
+    | '/'
+    | '/app/preview'
+    | '/app/settings'
+    | '/app/udm-execution-history'
+    | '/app'
   id:
     | '__root__'
     | '/'
     | '/app'
-    | '/app/automate'
     | '/app/preview'
     | '/app/settings'
+    | '/app/udm-execution-history'
     | '/app/'
   fileRoutesById: FileRoutesById
 }
@@ -120,6 +125,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppIndexRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/udm-execution-history': {
+      id: '/app/udm-execution-history'
+      path: '/udm-execution-history'
+      fullPath: '/app/udm-execution-history'
+      preLoaderRoute: typeof AppUdmExecutionHistoryRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/settings': {
       id: '/app/settings'
       path: '/settings'
@@ -134,27 +146,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppPreviewRouteImport
       parentRoute: typeof AppRoute
     }
-    '/app/automate': {
-      id: '/app/automate'
-      path: '/automate'
-      fullPath: '/app/automate'
-      preLoaderRoute: typeof AppAutomateRouteImport
-      parentRoute: typeof AppRoute
-    }
   }
 }
 
 interface AppRouteChildren {
-  AppAutomateRoute: typeof AppAutomateRoute
   AppPreviewRoute: typeof AppPreviewRoute
   AppSettingsRoute: typeof AppSettingsRoute
+  AppUdmExecutionHistoryRoute: typeof AppUdmExecutionHistoryRoute
   AppIndexRoute: typeof AppIndexRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
-  AppAutomateRoute: AppAutomateRoute,
   AppPreviewRoute: AppPreviewRoute,
   AppSettingsRoute: AppSettingsRoute,
+  AppUdmExecutionHistoryRoute: AppUdmExecutionHistoryRoute,
   AppIndexRoute: AppIndexRoute,
 }
 
