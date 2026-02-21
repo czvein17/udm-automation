@@ -1,8 +1,28 @@
 import type { Context } from "hono";
 import type { ApiResponse } from "shared";
-import { getLogs, insertLog } from "./logs.repo";
+import {
+  deleteAllLogs,
+  deleteLogsForRun,
+  getLogs,
+  getRunSummaries,
+  insertLog,
+} from "./logs.repo";
 import { parsePostBody } from "./logs.parser";
 import { broadcastReporterEvent } from "./logs.ws";
+
+export const getReporterRunHistory = async (c: Context) => {
+  const limitRaw = c.req.query("limit");
+  const limit = limitRaw ? Number(limitRaw) : 80;
+  const dataRows = await getRunSummaries(limit);
+
+  const data: ApiResponse<typeof dataRows> = {
+    message: "Reporter run history retrieved successfully",
+    success: true,
+    data: dataRows,
+  };
+
+  return c.json(data, 200);
+};
 
 export const getReporterEvents = async (c: Context) => {
   const runId = c.req.param("runId");
@@ -50,6 +70,31 @@ export const createReporterEvent = async (c: Context) => {
     message: "Reporter event inserted successfully",
     success: true,
     data: event,
+  };
+
+  return c.json(data, 200);
+};
+
+export const deleteReporterRunEvents = async (c: Context) => {
+  const runId = c.req.param("runId");
+  await deleteLogsForRun(runId);
+
+  const data: ApiResponse<{ runId: string }> = {
+    message: "Reporter run events deleted successfully",
+    success: true,
+    data: { runId },
+  };
+
+  return c.json(data, 200);
+};
+
+export const deleteAllReporterEvents = async (c: Context) => {
+  await deleteAllLogs();
+
+  const data: ApiResponse<null> = {
+    message: "All reporter events deleted successfully",
+    success: true,
+    data: null,
   };
 
   return c.json(data, 200);

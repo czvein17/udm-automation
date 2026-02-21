@@ -145,6 +145,96 @@ export async function getLogs(runId: string, cursor?: number, limit = 200) {
   };
 }
 
+type ReporterRunSummary = {
+  runId: string;
+  jobId?: string;
+  runnerId?: string;
+  firstTs: string;
+  lastTs: string;
+  totalEvents: number;
+  errorCount: number;
+  warnCount: number;
+  status: "ok" | "fail" | "running";
+  latestMessage: string;
+};
+
+function safeJsonParse(value: string | null) {
+  if (!value) return null;
+  try {
+    return JSON.parse(value) as Record<string, unknown>;
+  } catch {
+    return null;
+  }
+}
+
+export async function getRunSummaries(limit = 80, scanLimit = 5000) {
+  const safeScanLimit = Math.min(Math.max(scanLimit, 100), 10000);
+  const safeLimit = Math.min(Math.max(limit, 1), 500);
+
+  const rows = await db
+    .select()
+    .from(automationLogs)
+    .orderBy(desc(automationLogs.seq))
+    .limit(safeScanLimit);
+
+  const grouped = new Map<string, ReporterRunSummary>();
+
+  for (const row of rows) {
+    const existing = grouped.get(row.runId);
+    const parsedMeta = safeJsonParse(row.metaJson);
+    const eventMeta =
+      parsedMeta && "meta" in parsedMeta
+        ? (parsedMeta.meta as Record<string, unknown> | undefined)
+        : parsedMeta;
+    const isRowEnd = row.message === "row_end";
+    const rowEndStatus =
+      isRowEnd && eventMeta && "status" in eventMeta
+        ? String(eventMeta.status)
+        : undefined;
+
+    if (!existing) {
+      grouped.set(row.runId, {
+        runId: row.runId,
+        jobId: row.jobId ?? undefined,
+        runnerId: row.runnerId ?? undefined,
+        firstTs: row.ts,
+        lastTs: row.ts,
+        totalEvents: 1,
+        errorCount: row.level === "error" ? 1 : 0,
+        warnCount: row.level === "warn" ? 1 : 0,
+        status:
+          rowEndStatus === "fail"
+            ? "fail"
+            : rowEndStatus === "ok"
+              ? "ok"
+              : "running",
+        latestMessage: row.message,
+      });
+      continue;
+    }
+
+    existing.totalEvents += 1;
+    if (row.level === "error") existing.errorCount += 1;
+    if (row.level === "warn") existing.warnCount += 1;
+
+    if (row.ts < existing.firstTs) existing.firstTs = row.ts;
+    if (row.ts > existing.lastTs) existing.lastTs = row.ts;
+
+    if (!existing.jobId && row.jobId) existing.jobId = row.jobId;
+    if (!existing.runnerId && row.runnerId) existing.runnerId = row.runnerId;
+
+    if (rowEndStatus === "fail") {
+      existing.status = "fail";
+    } else if (rowEndStatus === "ok" && existing.status !== "fail") {
+      existing.status = "ok";
+    }
+  }
+
+  return Array.from(grouped.values())
+    .sort((a, b) => (a.lastTs > b.lastTs ? -1 : 1))
+    .slice(0, safeLimit);
+}
+
 export async function deleteLogsForRun(runId: string) {
   await db.delete(automationLogs).where(eq(automationLogs.runId, runId));
 }
