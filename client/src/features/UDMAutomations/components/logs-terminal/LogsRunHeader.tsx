@@ -24,18 +24,18 @@ export function LogsRunHeader({ header, runId }: LogsRunHeaderProps) {
   ];
 
   return (
-    <div className="px-3 py-2 border-b border-slate-800 text-[11px] text-slate-200 bg-slate-900/50">
+    <div className="logs-terminal-header">
       <div className="flex flex-wrap gap-x-4 gap-y-1">
         {headers.map((h) => (
           <span key={h.label}>
-            <span className="text-slate-400">{h.label}:</span>{" "}
+            <span className="logs-terminal-muted">{h.label}:</span>{" "}
             {valueOrDash(h.value)}
           </span>
         ))}
       </div>
       {header.config ? (
         <div className="mt-1">
-          <span className="text-slate-400">Config:</span> {header.config}
+          <span className="logs-terminal-muted">Config:</span> {header.config}
         </div>
       ) : null}
     </div>

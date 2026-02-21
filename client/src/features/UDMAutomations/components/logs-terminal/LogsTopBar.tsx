@@ -15,35 +15,34 @@ export function LogsTopBar({
   setAutoScroll,
   status,
 }: LogsTopBarProps) {
+  const statusClass =
+    status === "connected"
+      ? "logs-status-connected"
+      : status === "disconnected"
+        ? "logs-status-disconnected"
+        : "logs-status-neutral";
+
   return (
-    <div className="flex items-center gap-3 px-3 py-2 border-b border-slate-800 bg-slate-900/70 text-xs">
+    <div className="logs-terminal-topbar">
       <span className="font-semibold uppercase tracking-wide text-slate-100">
         Logs
       </span>
-      <span className="text-slate-400">run: {runId}</span>
-      <span className="text-slate-400">count: {totalCount}</span>
+      <span className="logs-terminal-muted">run: {runId}</span>
+      <span className="logs-terminal-muted">count: {totalCount}</span>
 
       <div className="ml-auto" />
 
       <label className="flex items-center gap-2">
         <input
-          className="accent-cyan-500"
+          className="accent-wtwSecondary"
           type="checkbox"
           checked={autoScroll}
           onChange={(e) => setAutoScroll(e.target.checked)}
         />
-        <span className="text-slate-200">Auto-scroll</span>
+        <span className="text-slate-100">Auto-scroll</span>
       </label>
 
-      <span
-        className={`px-2 py-1 rounded ${
-          status === "connected"
-            ? "bg-emerald-700 text-emerald-100"
-            : status === "disconnected"
-              ? "bg-rose-700 text-rose-100"
-              : "bg-slate-700 text-slate-100"
-        }`}
-      >
+      <span className={`px-2 py-1 rounded ${statusClass}`}>
         {status}
       </span>
     </div>

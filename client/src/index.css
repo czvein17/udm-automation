@@ -221,4 +221,93 @@
     @apply h-full min-h-0 p-2;
     background: linear-gradient(180deg, #f8fafc 0%, #f7f1fd 100%);
   }
+
+  .logs-terminal-shell {
+    @apply flex flex-col h-full min-h-0 rounded border;
+    border-color: color-mix(in srgb, var(--color-wtwSecondary) 32%, #334155);
+    background: linear-gradient(180deg, #161326 0%, #1d1830 45%, #151f2a 100%);
+    color: #e7e5f5;
+  }
+
+  .logs-terminal-topbar {
+    @apply flex items-center gap-3 px-3 py-2 border-b text-xs;
+    border-color: color-mix(in srgb, var(--color-wtwSecondary) 30%, #334155);
+    background: color-mix(in srgb, var(--color-wtwPrimary) 16%, #0f172a);
+  }
+
+  .logs-terminal-muted {
+    color: color-mix(in srgb, #e7e5f5 60%, #94a3b8);
+  }
+
+  .logs-terminal-header {
+    @apply px-3 py-2 border-b text-[11px];
+    border-color: color-mix(in srgb, var(--color-wtwSecondary) 26%, #334155);
+    color: #eceaf7;
+    background: color-mix(in srgb, var(--color-wtwPrimary) 12%, #111827);
+  }
+
+  .logs-terminal-empty {
+    @apply text-[11px] border border-dashed rounded p-3;
+    color: #bcb8d8;
+    border-color: color-mix(in srgb, var(--color-wtwSecondary) 28%, #334155);
+    background: color-mix(in srgb, var(--color-wtwPrimary) 10%, #0f172a);
+  }
+
+  .logs-group-card {
+    @apply relative border rounded p-2;
+    border-color: color-mix(in srgb, var(--color-wtwSecondary) 30%, #334155);
+    background: color-mix(in srgb, var(--color-wtwPrimary) 12%, #111827);
+  }
+
+  .logs-kv-label {
+    color: color-mix(in srgb, var(--color-wtwAccent) 72%, #cbd5e1);
+  }
+
+  .logs-actions-label {
+    color: color-mix(in srgb, var(--color-wtwSecondary) 68%, #eab308);
+  }
+
+  .logs-link {
+    color: color-mix(in srgb, var(--color-wtwAccent) 85%, #e2e8f0);
+  }
+
+  .logs-link:hover {
+    text-decoration: underline;
+  }
+
+  .logs-status-connected {
+    background: color-mix(in srgb, #059669 70%, #111827);
+    color: #d1fae5;
+  }
+
+  .logs-status-disconnected {
+    background: color-mix(in srgb, #e11d48 70%, #111827);
+    color: #ffe4e6;
+  }
+
+  .logs-status-neutral {
+    background: color-mix(in srgb, var(--color-wtwSecondary) 42%, #334155);
+    color: #ede9fe;
+  }
+
+  .logs-badge-ok {
+    background: color-mix(in srgb, #10b981 64%, #111827);
+    color: #d1fae5;
+  }
+
+  .logs-badge-fail {
+    background: color-mix(in srgb, #e11d48 64%, #111827);
+    color: #ffe4e6;
+  }
+
+  .logs-badge-running {
+    background: color-mix(in srgb, var(--color-wtwSecondary) 50%, #334155);
+    color: #ede9fe;
+  }
+
+  .logs-issues-banner {
+    @apply mb-3 border rounded p-2;
+    border-color: color-mix(in srgb, #e11d48 45%, #334155);
+    background: color-mix(in srgb, #e11d48 14%, #111827);
+  }
 }

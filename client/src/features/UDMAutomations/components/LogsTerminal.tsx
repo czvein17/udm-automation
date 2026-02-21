@@ -93,7 +93,7 @@ export function LogsTerminal({ runId }: LogsTerminalProps) {
   }, [autoScroll, items.length, renderedGroups.length]);
 
   return (
-    <div className="flex flex-col h-full min-h-0 border rounded border-slate-700 bg-slate-950 text-slate-100">
+    <div className="logs-terminal-shell">
       <LogsTopBar
         runId={runId}
         totalCount={totalCount}
@@ -103,7 +103,7 @@ export function LogsTerminal({ runId }: LogsTerminalProps) {
       />
 
       {status === "disconnected" ? (
-        <div className="px-3 py-2 text-xs bg-rose-900/40 border-b border-rose-800 text-rose-100">
+        <div className="px-3 py-2 text-xs border-b logs-status-disconnected">
           Live stream disconnected. Reconnect attempts exhausted.
         </div>
       ) : null}
@@ -124,7 +124,7 @@ export function LogsTerminal({ runId }: LogsTerminalProps) {
             ))}
           </div>
         ) : (
-          <div className="text-[11px] text-slate-400 border border-dashed border-slate-700/90 rounded p-3 bg-slate-900/30">
+          <div className="logs-terminal-empty">
             No grouped rows yet. Run automation to populate logs.
           </div>
         )}

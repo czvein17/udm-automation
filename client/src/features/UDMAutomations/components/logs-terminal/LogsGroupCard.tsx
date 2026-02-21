@@ -34,7 +34,7 @@ export function LogsGroupCard({ group }: LogsGroupCardProps) {
   ];
 
   return (
-    <div className="relative border border-slate-700 rounded bg-slate-900/50 p-2">
+    <div className="logs-group-card">
       <div className="absolute top-2 right-2 flex items-center gap-2 text-[11px] font-semibold text-slate-100">
         <span>Row {group.rowIndex}</span>
         <span
@@ -47,14 +47,14 @@ export function LogsGroupCard({ group }: LogsGroupCardProps) {
       <div className="mt-1 text-[11px] text-slate-200 space-y-0.5">
         {LogsHeader.map((header) => (
           <div key={header.label} className="mt-1">
-            <span className="text-cyan-300">{header.label}:</span>{" "}
+            <span className="logs-kv-label">{header.label}:</span>{" "}
             {header.label !== "URL" ? valueOrDash(header.value) : null}
             {header.label === "URL" && header.value && (
               <a
                 href={header.value}
                 target="_blank"
                 rel="noreferrer"
-                className="text-sky-300 hover:underline ml-1"
+                className="logs-link ml-1"
               >
                 {header.value}
               </a>
@@ -63,9 +63,9 @@ export function LogsGroupCard({ group }: LogsGroupCardProps) {
         ))}
 
         <div>
-          <span className="text-emerald-300">ACTIONS:</span>
+          <span className="logs-actions-label">ACTIONS:</span>
           {group.actions.length > 0 ? (
-            <ul className="mt-1 ml-4 list-none text-amber-300">
+            <ul className="mt-1 ml-4 list-none text-amber-200">
               {group.actions.map((action) => (
                 <li key={action}>
                   <ChevronRight className="inline mr-1 w-3 h-3" /> {action}

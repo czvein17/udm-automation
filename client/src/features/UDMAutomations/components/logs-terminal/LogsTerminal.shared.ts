@@ -15,10 +15,10 @@ export function getGroupBadge(group: TaskGroup): {
   className: string;
 } {
   if (group.status === "fail" || group.issues.length > 0) {
-    return { label: "fail", className: "bg-rose-700 text-rose-100" };
+    return { label: "fail", className: "logs-badge-fail" };
   }
   if (group.status === "ok") {
-    return { label: "ok", className: "bg-emerald-700 text-emerald-100" };
+    return { label: "ok", className: "logs-badge-ok" };
   }
-  return { label: "running", className: "bg-slate-700 text-slate-100" };
+  return { label: "running", className: "logs-badge-running" };
 }
