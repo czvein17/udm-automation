@@ -1,6 +1,6 @@
 import type { Config } from "@server/db/schema";
 
-import * as YTService from "server/dist/feature/youtube/youtube.service";
+import * as automationService from "server/dist/feature/automation/automation.service";
 import * as TaskService from "server/dist/feature/task/task.service";
 
 import { buildRecordUrl } from "../../util/buildUrl";
@@ -24,7 +24,7 @@ export const startAutomation = async (
   context: any,
   report: Reporter,
 ) => {
-  const taskList = await YTService.getTasksByRunId(runId);
+  const taskList = await automationService.getTasksByRunId(runId);
 
   if (!taskList || taskList.length === 0) {
     throw new Error("No tasks found for runId: " + runId);

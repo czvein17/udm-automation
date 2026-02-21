@@ -6,14 +6,14 @@ import { tasks, type Task } from "@server/db/schema";
 import { runAutomationJob } from "@server/runners/automation.runner";
 import { createRun } from "@server/stores/run.store";
 
-import * as YTRepo from "./youtube.repositories";
+import * as automationRepo from "./automation.repositories";
 import type { CreateTask } from "shared/dist";
 
-export async function startOpenYoutubeRun(
+export async function startAutomationRun(
   payload: CreateTask,
 ): Promise<{ runId: string }> {
   const runId = nanoid();
-  const jobId = "open-youtube";
+  const jobId = "udm-automation";
 
   createRun(runId, jobId);
 
@@ -27,14 +27,14 @@ export async function startOpenYoutubeRun(
     displayName: payload.displayName,
   };
 
-  await YTRepo.createTask(newTask);
+  await automationRepo.createTask(newTask);
 
   runAutomationJob({ runId, jobId });
 
   return { runId };
 }
 
-export async function openYtTabsMultiple(
+export async function openAutomationMultiple(
   payloads: CreateTask[],
 ): Promise<{ runId: string }> {
   const runId = nanoid();
@@ -50,7 +50,7 @@ export async function openYtTabsMultiple(
     displayName: payload.displayName,
   }));
 
-  await YTRepo.createTaskMultiple(newTasks);
+  await automationRepo.createTaskMultiple(newTasks);
 
   runAutomationJob({ runId, jobId });
 
@@ -58,7 +58,7 @@ export async function openYtTabsMultiple(
 }
 
 export async function getTasksByRunId(runId: string): Promise<Task[]> {
-  const TaskList = await YTRepo.getTaskListByRunId(runId);
+  const TaskList = await automationRepo.getTaskListByRunId(runId);
   return TaskList;
 }
 
@@ -66,7 +66,7 @@ export const createTask = async (payload: CreateTask): Promise<Task | null> => {
   console.log(payload);
 
   const runId = nanoid();
-  const jobId = "open-youtube";
+  const jobId = "udm-automation";
 
   createRun(runId, jobId);
   const newTask: Task = {

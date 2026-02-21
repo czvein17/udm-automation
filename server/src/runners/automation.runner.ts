@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 import { appendLog, finishRun } from "../stores/run.store";
 import { parseLogLine } from "@server/feature/logs/logs.parser";
 import { insertLog } from "@server/feature/logs/logs.repo";
-import { broadcastLog } from "@server/feature/logs/logs.ws";
+import { broadcastReporterEvent } from "@server/feature/logs/logs.ws";
 
 export function runAutomationJob(args: { runId: string; jobId: string }) {
   // resolve repo root relative to this file (robust regardless of process.cwd)
@@ -44,7 +44,7 @@ export function runAutomationJob(args: { runId: string; jobId: string }) {
       });
 
       void insertLog(event)
-        .then(() => broadcastLog(event.runId, event))
+        .then(() => broadcastReporterEvent(event.runId, event))
         .catch((err) => console.error("Failed to persist automation log", err));
     }
   };

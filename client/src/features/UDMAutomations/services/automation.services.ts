@@ -4,7 +4,7 @@ import { type ApiResponse } from "shared/";
 export const submitElementListService = async (
   elements: ElementRow[],
 ): Promise<ApiResponse<{ runId: string } | null>> => {
-  const response = await fetch("/api/v1/youtube/open-multiple", {
+  const response = await fetch("/api/v1/automation/open-multiple", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

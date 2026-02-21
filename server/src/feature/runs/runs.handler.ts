@@ -27,7 +27,7 @@ type TaskRuns = {
   }[];
 };
 
-export async function getAllRunByRunId(c: Context) {
+export async function getAllRunByRunId(_c: Context) {
   const tasksRuns: TaskRuns[] = [
     {
       id: "test-task-1",
@@ -70,5 +70,5 @@ export async function getAllRunByRunId(c: Context) {
     data: tasksRuns,
   };
 
-  return c.json(data, 200);
+  return _c.json(data, 200);
 }

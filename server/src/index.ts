@@ -6,7 +6,10 @@ import type { ApiResponse } from "shared/dist";
 import path from "node:path";
 import { appRouter } from "./app/router";
 import { errorMiddleware } from "./middleware/errorHandler";
-import { connectLogsRoom, disconnectLogsRoom } from "./feature/logs/logs.ws";
+import {
+  connectReporterRoom,
+  disconnectReporterRoom,
+} from "./feature/logs/logs.ws";
 export type { LogEvent, LogLevel } from "./feature/logs/logs.schema";
 
 process.title = "bhvr-api-dev";
@@ -38,27 +41,26 @@ api.get("/hello", async (c) => {
   return c.json(data, { status: 200 });
 });
 
-app.get(
-  "/ws/logs/:runId",
-  upgradeWebSocket((c) => {
-    const runId = c.req.param("runId");
+const reporterWebSocketHandler = upgradeWebSocket((c) => {
+  const runId = c.req.param("runId");
 
-    return {
-      onOpen: async (_event, ws) => {
-        await connectLogsRoom(runId, ws);
-      },
-      onClose: (_event, ws) => {
-        disconnectLogsRoom(runId, ws);
-      },
-    };
-  }),
-);
+  return {
+    onOpen: async (_event, ws) => {
+      await connectReporterRoom(runId, ws);
+    },
+    onClose: (_event, ws) => {
+      disconnectReporterRoom(runId, ws);
+    },
+  };
+});
+
+app.get("/ws/reporter/:runId", reporterWebSocketHandler);
 
 app.use("/*", serveStatic({ root: clientDist }));
 app.get("*", serveStatic({ path: path.join(clientDist, "index.html") }));
 
+export type ApiRoute = typeof api;
 export default {
   fetch: app.fetch,
   websocket,
 };
-export type ApiRoute = typeof api;

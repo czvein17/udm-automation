@@ -1,6 +1,6 @@
 import { Hono } from "hono";
-import { createRunLog, getRunLogs } from "./logs.handler";
+import { createReporterEvent, getReporterEvents } from "./logs.handler";
 
-export const logsRoutes = new Hono()
-  .get("/runs/:runId/logs", getRunLogs)
-  .post("/runs/:runId/logs", createRunLog);
+export const reporterRoutes = new Hono()
+  .get("/runs/:runId/events", getReporterEvents)
+  .post("/runs/:runId/events", createReporterEvent);

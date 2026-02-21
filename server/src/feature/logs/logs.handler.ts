@@ -2,9 +2,9 @@ import type { Context } from "hono";
 import type { ApiResponse } from "shared";
 import { getLogs, insertLog } from "./logs.repo";
 import { parsePostBody } from "./logs.parser";
-import { broadcastLog } from "./logs.ws";
+import { broadcastReporterEvent } from "./logs.ws";
 
-export const getRunLogs = async (c: Context) => {
+export const getReporterEvents = async (c: Context) => {
   const runId = c.req.param("runId");
   const cursorRaw = c.req.query("cursor");
   const limitRaw = c.req.query("limit");
@@ -19,7 +19,7 @@ export const getRunLogs = async (c: Context) => {
   );
 
   const data: ApiResponse<typeof result> = {
-    message: "Logs retrieved successfully",
+    message: "Reporter events retrieved successfully",
     success: true,
     data: result,
   };
@@ -27,7 +27,7 @@ export const getRunLogs = async (c: Context) => {
   return c.json(data, 200);
 };
 
-export const createRunLog = async (c: Context) => {
+export const createReporterEvent = async (c: Context) => {
   const runId = c.req.param("runId");
   const body = await c.req.json().catch(() => null);
 
@@ -35,7 +35,7 @@ export const createRunLog = async (c: Context) => {
   if (!event) {
     return c.json(
       {
-        message: "Invalid log payload",
+        message: "Invalid reporter event payload",
         success: false,
         data: null,
       } satisfies ApiResponse<null>,
@@ -44,10 +44,10 @@ export const createRunLog = async (c: Context) => {
   }
 
   await insertLog(event);
-  broadcastLog(event.runId, event);
+  broadcastReporterEvent(event.runId, event);
 
   const data: ApiResponse<typeof event> = {
-    message: "Log inserted successfully",
+    message: "Reporter event inserted successfully",
     success: true,
     data: event,
   };
