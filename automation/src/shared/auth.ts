@@ -59,13 +59,13 @@ export async function ensureLoggedIn(opts: {
     );
     console.log("SSO URL:", urlNow);
 
-    await page.waitForSelector("#signInName", { timeout: 5000 });
-    await page.fill("#signInName", process.env.UDM_USERNAME ?? "CZVEI8167");
-    // if the continue button navigates, wait for navigation
-    await Promise.all([
-      page.waitForNavigation({ waitUntil: "domcontentloaded", timeout: 15000 }),
-      page.click("#continue"),
-    ]);
+    // await page.waitForSelector("#signInName", { timeout: 5000 });
+    // await page.fill("#signInName", process.env.UDM_USERNAME ?? "CZVEI8167");
+    // // if the continue button navigates, wait for navigation
+    // await Promise.all([
+    //   page.waitForNavigation({ waitUntil: "domcontentloaded", timeout: 15000 }),
+    //   page.click("#continue"),
+    // ]);
 
     // ✅ Wait until we're back to the app host (no timeout)
     await page.waitForURL(
