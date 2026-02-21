@@ -1,13 +1,17 @@
 import type { Page } from "playwright-core";
+import { getElementStatus } from "../../actions/udm-actions/checkElementStatus";
 import { ensureUnlocked } from "../../actions/udm-actions/ensureUnlocked";
 import { toggleApprove } from "../../actions/udm-actions/toggleApprove";
 import type { RowReporter } from "../../shared/reporter";
 
 export const reApprove = async (tab: Page, row: RowReporter) => {
+  await tab.waitForTimeout(1000);
+
   // ensure this page has focus before interacting (concurrent pages may steal focus)
   await row.step("Re-approve: focus tab", {
     action: "bring to front",
   });
+
   await tab.bringToFront();
 
   await row.step("Re-approve: unlock check", {
@@ -38,4 +42,16 @@ export const reApprove = async (tab: Page, row: RowReporter) => {
   await row.step("Re-approve: approve result", {
     success: approved === true ? "yes" : "no",
   });
+
+  const statusAfterToggle = await getElementStatus(tab);
+
+  await row.step("Re-approve: status after toggle", {
+    status: statusAfterToggle,
+  });
+
+  if (!approved || statusAfterToggle !== "approved") {
+    throw new Error(
+      `Re-approve did not reach approved state (status: ${statusAfterToggle})`,
+    );
+  }
 };

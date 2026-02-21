@@ -137,6 +137,7 @@ export const startAutomation = async (
               try {
                 await selectLanguage(page, translation);
                 await row.step("Language selected", { value: translation });
+                await row.step("Language applied", { value: translation });
               } catch (err: any) {
                 await row.fail("LANGUAGE_SELECTION_FAILED", {
                   message: err?.message ?? String(err),
