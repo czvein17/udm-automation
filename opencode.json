@@ -1,0 +1,83 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+
+  "mcp": {
+    "sequential-thinking": {
+      "type": "local",
+      "command": [
+        "npx",
+        "-y",
+        "@modelcontextprotocol/server-sequential-thinking"
+      ],
+      "enabled": true
+    },
+
+    "context7": {
+      "type": "local",
+      "command": [
+        "npx",
+        "-y",
+        "@upstash/context7-mcp",
+        "--api-key",
+        "$CONTEXT7_API_KEY"
+      ],
+      "enabled": true
+    },
+
+    "projectFS": {
+      "type": "local",
+      "command": ["npx", "-y", "@modelcontextprotocol/server-filesystem", "."],
+      "enabled": true
+    }
+  },
+
+  "instructions": [
+    "AGENTS.md",
+    "automation-context-factory/AGENTS.md",
+    "automation-context-factory/01-product-intent.md",
+    "automation-context-factory/02-context-factory-template.md",
+    "automation-context-factory/03-non-negotiable-rules.md",
+    "automation-context-factory/04-architecture-and-boundaries.md",
+    "automation-context-factory/05-engineering-standards.md",
+    "automation-context-factory/06-scalability-principles.md",
+    "automation-context-factory/07-change-playbooks.md",
+    "automation-context-factory/08-verification-and-dod.md"
+  ],
+
+  "permission": {
+    "read": "allow",
+    "list": "allow",
+    "glob": "allow",
+    "grep": "allow",
+    "skill": "allow",
+    "bash": "ask",
+    "edit": "ask"
+  },
+
+  "watcher": {
+    "ignore": ["node_modules/**", "dist/**", ".git/**"]
+  },
+
+  "command": {
+    "install": {
+      "description": "Run bun install",
+      "template": "Run `bun install` in this repo using the bash tool. Show any errors and fix them."
+    },
+    "build": {
+      "description": "Build the monorepo",
+      "template": "Run `bun run build` using the bash tool. If it fails, diagnose and propose fixes."
+    },
+    "typecheck": {
+      "description": "Type-check the monorepo",
+      "template": "Run `bun run type-check` using the bash tool and resolve any TypeScript errors."
+    },
+    "dev": {
+      "description": "Start dev",
+      "template": "Run `bun run dev` using the bash tool. Confirm server and client start."
+    },
+    "automation:run": {
+      "description": "Run an automation job (jobId + runId)",
+      "template": "Run `bun --filter automation run automate -- $1 $2` using the bash tool. Stream logs and summarize outcome."
+    }
+  }
+}

@@ -43,7 +43,7 @@ Key files:
 ### Logger behavior
 
 - Prints readable console output (`[HH:mm:ss] LEVEL label key=value ...`).
-- Sends structured `LogEvent` to server: `POST /api/v1/runs/:runId/logs`.
+- Sends structured `LogEvent` to server: `POST /api/v1/reporter/runs/:runId/events`.
 - Supports context-aware logging (`ctx`) to enrich UI grouping.
 
 ### Helper util
@@ -78,18 +78,18 @@ SQLite table: `automation_logs`
 
 ### API
 
-- `GET /api/v1/runs/:runId/logs?cursor=&limit=`
+- `GET /api/v1/reporter/runs/:runId/events?cursor=&limit=`
   - paginated history
-- `POST /api/v1/runs/:runId/logs`
+- `POST /api/v1/reporter/runs/:runId/events`
   - accepts structured event or raw line shape (parser handles both)
 
 ### WebSocket
 
-- endpoint: `/ws/logs/:runId`
-- room model: `logs:<runId>`
+- endpoint: `/ws/reporter/:runId`
+- room model: `reporter:<runId>`
 - emits:
-  - `logs:batch` on connect (initial latest logs)
-  - `logs:line` for each new event
+  - `reporter:batch` on connect (initial latest events)
+  - `reporter:line` for each new event
 
 ---
 
@@ -139,8 +139,8 @@ The detailed raw timeline was intentionally removed to keep the UI focused.
 1. UDM automation runs.
 2. `logger.info("navigate", { url }, ctx)` is called.
 3. Logger prints readable line + POSTs `LogEvent`.
-4. Server stores event and broadcasts to room `logs:<runId>`.
-5. Browser receives `logs:line`, appends in memory.
+4. Server stores event and broadcasts to room `reporter:<runId>`.
+5. Browser receives `reporter:line`, appends in memory.
 6. `LogsTerminal` groups it under a matching `Row N` based on context (`taskId`/field/element).
 
 ---
