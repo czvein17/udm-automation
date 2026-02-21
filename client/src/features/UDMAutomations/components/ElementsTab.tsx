@@ -1,4 +1,4 @@
-import { useMemo, useState, useRef } from "react";
+import { useMemo, useState, useRef, useEffect } from "react";
 import { getCoreRowModel, useReactTable } from "@tanstack/react-table";
 
 import { elementRowsSchema } from "shared/dist/schema/elements.schema";
@@ -18,6 +18,15 @@ import {
 } from "../hooks/useElementsTableMeta";
 import { useElementServices } from "../hooks/useElementsServices";
 import { ClipboardPaste, Plus, Table2 } from "lucide-react";
+import {
+  useAutomationSessionStore,
+  useElementsDraftStore,
+} from "../store/automationUi.store";
+import { useShallow } from "zustand/react/shallow";
+import {
+  selectElementsDraftSlice,
+  selectSetCurrentRunId,
+} from "../store/automationUi.selectors";
 
 type ElementsTableMeta = HookMeta;
 
@@ -44,21 +53,36 @@ const HEADER_ALIASES: Record<
   status: null,
 };
 
-type ElementsTabProps = {
-  onSubmittedRunId?: (runId: string) => void;
-};
-
-export function ElementsTab({ onSubmittedRunId }: ElementsTabProps) {
+export function ElementsTab() {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const setCurrentRunId = useAutomationSessionStore(selectSetCurrentRunId);
+  const {
+    elementRows,
+    setElementRows,
+    selectedRowIndexes,
+    setSelectedRowIndexes,
+  } = useElementsDraftStore(useShallow(selectElementsDraftSlice));
 
-  const [data, setData] = useState<ElementRow[]>(initialRows);
-  const [selectedRows, setSelectedRows] = useState<Set<number>>(new Set());
+  const [data, setData] = useState<ElementRow[]>(() =>
+    elementRows.length ? elementRows : initialRows,
+  );
+  const [selectedRows, setSelectedRows] = useState<Set<number>>(
+    () => new Set(selectedRowIndexes),
+  );
 
   const [submitted, setSubmitted] = useState(false);
   const [errors, setErrors] = useState<RowFieldErrors>({});
 
+  useEffect(() => {
+    setElementRows(data);
+  }, [data, setElementRows]);
+
+  useEffect(() => {
+    setSelectedRowIndexes(Array.from(selectedRows));
+  }, [selectedRows, setSelectedRowIndexes]);
+
   const { mutateFn: submitElementsList } = useElementServices({
-    onSubmitted: onSubmittedRunId,
+    onSubmitted: setCurrentRunId,
   });
 
   const columns = useMemo(
