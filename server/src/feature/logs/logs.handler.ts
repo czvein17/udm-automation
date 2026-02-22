@@ -63,13 +63,18 @@ export const createReporterEvent = async (c: Context) => {
     );
   }
 
-  await insertLog(event);
-  broadcastReporterEvent(event.runId, event);
+  const inserted = await insertLog(event);
+  const storedEvent = {
+    ...inserted,
+    seq: undefined,
+  };
+  delete (storedEvent as { seq?: number }).seq;
+  broadcastReporterEvent(storedEvent.runId, storedEvent);
 
-  const data: ApiResponse<typeof event> = {
+  const data: ApiResponse<typeof storedEvent> = {
     message: "Reporter event inserted successfully",
     success: true,
-    data: event,
+    data: storedEvent,
   };
 
   return c.json(data, 200);

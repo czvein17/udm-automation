@@ -3,7 +3,7 @@ import { spawn } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { appendLog, finishRun } from "../stores/run.store";
 import { parseLogLine } from "@server/feature/logs/logs.parser";
-import { insertLog } from "@server/feature/logs/logs.repo";
+import { clearRunSeqCache, insertLog } from "@server/feature/logs/logs.repo";
 import { broadcastReporterEvent } from "@server/feature/logs/logs.ws";
 
 export function runAutomationJob(args: { runId: string; jobId: string }) {
@@ -44,7 +44,14 @@ export function runAutomationJob(args: { runId: string; jobId: string }) {
       });
 
       void insertLog(event)
-        .then(() => broadcastReporterEvent(event.runId, event))
+        .then((inserted) => {
+          const storedEvent = {
+            ...inserted,
+            seq: undefined,
+          };
+          delete (storedEvent as { seq?: number }).seq;
+          broadcastReporterEvent(storedEvent.runId, storedEvent);
+        })
         .catch((err) => console.error("Failed to persist automation log", err));
     }
   };
@@ -60,6 +67,7 @@ export function runAutomationJob(args: { runId: string; jobId: string }) {
       exitCode: code ?? -1,
       error: ok ? undefined : `Exit code ${code ?? -1}`,
     });
+    clearRunSeqCache(runId);
   });
 
   child.on("error", (err: Error & { code?: string }) => {
@@ -85,16 +93,18 @@ export function runAutomationJob(args: { runId: string; jobId: string }) {
           exitCode: code ?? -1,
           error: ok ? undefined : `Exit code ${code ?? -1}`,
         });
+        clearRunSeqCache(runId);
       });
 
-      fallback.on("error", (e) =>
+      fallback.on("error", (e) => {
         finishRun(runId, {
           status: "FAILED",
           finishedAt: new Date().toISOString(),
           exitCode: -1,
           error: e.message,
-        }),
-      );
+        });
+        clearRunSeqCache(runId);
+      });
       return;
     }
 
@@ -104,5 +114,6 @@ export function runAutomationJob(args: { runId: string; jobId: string }) {
       exitCode: -1,
       error: err.message,
     });
+    clearRunSeqCache(runId);
   });
 }

@@ -11,6 +11,25 @@ import {
   wsUrlForRun,
 } from "./useLogsStream.utils";
 
+function eventKey(event: LogEvent) {
+  if (event.id) return event.id;
+  return `${event.runId}|${event.ts}|${event.level}|${event.message}`;
+}
+
+function dedupeEvents(events: LogEvent[]) {
+  const seen = new Set<string>();
+  const deduped: LogEvent[] = [];
+
+  for (const event of events) {
+    const key = eventKey(event);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    deduped.push(event);
+  }
+
+  return deduped;
+}
+
 export function useLogsStream(runId: string, initialLimit = 200) {
   const [items, setItems] = useState<LogEvent[]>([]);
   const [autoScroll, setAutoScroll] = useState(true);
@@ -25,6 +44,7 @@ export function useLogsStream(runId: string, initialLimit = 200) {
   const reconnectTimerRef = useRef<number | null>(null);
   const flushTimerRef = useRef<number | null>(null);
   const pendingEventsRef = useRef<LogEvent[]>([]);
+  const seenEventKeysRef = useRef(new Set<string>());
   const allowReconnectRef = useRef(true);
   const inFlightCursorRef = useRef<number | null>(null);
   const loadedCursorRef = useRef(new Set<number>());
@@ -47,14 +67,29 @@ export function useLogsStream(runId: string, initialLimit = 200) {
     if (pendingEventsRef.current.length === 0) return;
     const batch = pendingEventsRef.current;
     pendingEventsRef.current = [];
-    setItems((prev) => capEvents([...prev, ...batch]));
+    setItems((prev) => {
+      const merged = capEvents(dedupeEvents([...prev, ...batch]));
+      seenEventKeysRef.current = new Set(merged.map(eventKey));
+      return merged;
+    });
   }, []);
 
   const queueEvents = useCallback(
     (incoming: LogEvent[]) => {
       if (incoming.length === 0) return;
+      const uniqueIncoming: LogEvent[] = [];
+      const seen = seenEventKeysRef.current;
 
-      pendingEventsRef.current.push(...incoming);
+      for (const event of incoming) {
+        const key = eventKey(event);
+        if (seen.has(key)) continue;
+        seen.add(key);
+        uniqueIncoming.push(event);
+      }
+
+      if (uniqueIncoming.length === 0) return;
+
+      pendingEventsRef.current.push(...uniqueIncoming);
 
       if (flushTimerRef.current != null) return;
 
@@ -79,6 +114,7 @@ export function useLogsStream(runId: string, initialLimit = 200) {
 
     loadedCursorRef.current.clear();
     inFlightCursorRef.current = null;
+    seenEventKeysRef.current.clear();
 
     const res = await fetch(
       `/api/v1/reporter/runs/${encodeURIComponent(runId)}/events?limit=${encodeURIComponent(String(initialLimit))}`,
@@ -90,7 +126,9 @@ export function useLogsStream(runId: string, initialLimit = 200) {
       data?: { items?: LogEvent[]; nextCursor?: number | null };
     };
 
-    setItems(json.data?.items ?? []);
+    const initialItems = capEvents(dedupeEvents(json.data?.items ?? []));
+    seenEventKeysRef.current = new Set(initialItems.map(eventKey));
+    setItems(initialItems);
     setNextCursor(json.data?.nextCursor ?? null);
   }, [initialLimit, runId]);
 
@@ -117,7 +155,11 @@ export function useLogsStream(runId: string, initialLimit = 200) {
 
       const olderItems = json.data?.items ?? [];
       loadedCursorRef.current.add(nextCursor);
-      setItems((prev) => capEvents([...olderItems, ...prev]));
+      setItems((prev) => {
+        const merged = capEvents(dedupeEvents([...olderItems, ...prev]));
+        seenEventKeysRef.current = new Set(merged.map(eventKey));
+        return merged;
+      });
       setNextCursor(json.data?.nextCursor ?? null);
     } finally {
       inFlightCursorRef.current = null;
@@ -209,6 +251,7 @@ export function useLogsStream(runId: string, initialLimit = 200) {
       setItems([]);
       setNextCursor(null);
       setIsLoadingOlder(false);
+      seenEventKeysRef.current.clear();
       loadedCursorRef.current.clear();
       inFlightCursorRef.current = null;
       return;
@@ -231,6 +274,7 @@ export function useLogsStream(runId: string, initialLimit = 200) {
       clearReconnect();
       clearFlushTimer();
       pendingEventsRef.current = [];
+      seenEventKeysRef.current.clear();
       wsRef.current?.close();
       wsRef.current = null;
     };
