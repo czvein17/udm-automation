@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import beaver from "../assets/beaver.svg";
+import beaver from "@/assets/beaver.svg";
 
 export const Route = createFileRoute("/")({
   component: Index,

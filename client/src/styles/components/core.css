@@ -1,0 +1,95 @@
+@layer components {
+  .logs-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: #475569 #0f172a;
+  }
+
+  .logs-scrollbar::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  .logs-scrollbar::-webkit-scrollbar-track {
+    background: #0f172a;
+    border-radius: 9999px;
+  }
+
+  .logs-scrollbar::-webkit-scrollbar-thumb {
+    background: #475569;
+    border-radius: 9999px;
+    border: 2px solid #0f172a;
+  }
+
+  .logs-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #64748b;
+  }
+
+  .elements-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: #94a3b8 #f1f5f9;
+  }
+
+  .elements-scrollbar::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  .elements-scrollbar::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 9999px;
+  }
+
+  .elements-scrollbar::-webkit-scrollbar-thumb {
+    background: #94a3b8;
+    border-radius: 9999px;
+    border: 2px solid #f1f5f9;
+  }
+
+  .elements-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #64748b;
+  }
+
+  .sidebar-link {
+    @apply flex items-center gap-2 px-4 py-3 text-sm font-medium transition-all rounded text-slate-500 hover:bg-wtwSecondary/10 hover:text-wtwPrimary;
+  }
+
+  .sidebar-link-active {
+    @apply font-semibold rounded text-wtwPrimary;
+  }
+
+  .btn-primary {
+    @apply px-5 py-2 text-white rounded-lg cursor-pointer bg-wtwPrimary hover:bg-wtwSecondary;
+  }
+
+  .btn {
+    @apply px-3 py-1.5 text-xs font-semibold rounded bg-white border border-slate-200 text-slate-700 hover:bg-wtwSecondary hover:text-white;
+  }
+
+  .btn-danger {
+    @apply px-3 py-1.5 text-xs font-semibold rounded bg-white border border-slate-200 text-red-600 hover:bg-red-600 hover:text-white;
+  }
+
+  .form-row {
+    @apply flex items-center gap-3 mb-3;
+  }
+
+  .form-label {
+    @apply w-36 text-xs text-slate-600 font-semibold;
+  }
+
+  .form-input {
+    @apply flex-1 px-3 py-2 text-sm rounded border border-slate-200 bg-white outline-none focus:ring focus:ring-wtwPrimary focus:border-transparent;
+  }
+
+  .card-section {
+    @apply p-4 bg-white border rounded-lg shadow-sm border-slate-200;
+  }
+
+  .form-actions {
+    @apply mt-4 flex items-center gap-2;
+  }
+
+  .card {
+    @apply h-full bg-white border shadow-sm rounded-2xl border-slate-200;
+  }
+}

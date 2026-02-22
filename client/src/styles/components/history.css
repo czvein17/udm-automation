@@ -1,0 +1,77 @@
+@layer components {
+  .history-layout {
+    @apply p-8;
+  }
+
+  .history-shell {
+    @apply mx-auto h-[calc(100vh-160px)] flex flex-col gap-3;
+    max-width: 96rem;
+  }
+
+  .history-hero {
+    @apply bg-white border shadow-sm rounded-2xl border-slate-200 p-4;
+    background: linear-gradient(120deg, #ffffff 0%, #f7f1fd 45%, #eef8fc 100%);
+    border-color: color-mix(in srgb, var(--color-wtwSecondary) 20%, #e2e8f0);
+  }
+
+  .history-card {
+    @apply bg-white border shadow-sm rounded-2xl border-slate-200 p-3;
+  }
+
+  .history-run-card {
+    @apply border rounded-xl p-3 transition-colors;
+    border-color: color-mix(in srgb, var(--color-wtwSecondary) 22%, #dbe2ec);
+    background: linear-gradient(180deg, #ffffff 0%, #faf7fd 100%);
+  }
+
+  .history-run-card:hover {
+    border-color: color-mix(in srgb, var(--color-wtwSecondary) 40%, #cbd5e1);
+  }
+
+  .history-status {
+    @apply px-2 py-0.5 rounded text-[11px] font-semibold uppercase tracking-wide;
+  }
+
+  .history-status-ok {
+    color: #065f46;
+    background: #d1fae5;
+  }
+
+  .history-status-fail {
+    color: #9f1239;
+    background: #ffe4e6;
+  }
+
+  .history-status-running {
+    color: #5b21b6;
+    background: #ede9fe;
+  }
+
+  .history-event-item {
+    @apply rounded border px-3 py-2 text-xs;
+    border-color: color-mix(in srgb, var(--color-wtwSecondary) 24%, #d1d9e4);
+    background: #ffffff;
+  }
+
+  .history-modal-overlay {
+    @apply fixed inset-0 z-50;
+    background: color-mix(in srgb, #0f172a 62%, transparent);
+    backdrop-filter: blur(3px);
+  }
+
+  .history-modal {
+    @apply fixed left-1/2 top-1/2 z-50 w-[min(1100px,92vw)] h-[min(84vh,760px)] -translate-x-1/2 -translate-y-1/2 rounded-2xl border shadow-2xl flex flex-col;
+    border-color: color-mix(in srgb, var(--color-wtwSecondary) 28%, #334155);
+    background: linear-gradient(180deg, #111827 0%, #161326 100%);
+  }
+
+  .history-modal-header {
+    @apply flex items-center justify-between px-4 py-3 border-b;
+    border-color: color-mix(in srgb, var(--color-wtwSecondary) 32%, #334155);
+    color: #ebe8f7;
+  }
+
+  .history-modal-body {
+    @apply flex-1 min-h-0 p-3;
+  }
+}

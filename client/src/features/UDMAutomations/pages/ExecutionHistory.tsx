@@ -35,7 +35,9 @@ function toStatusClass(status: RunHistorySummary["status"]) {
 }
 
 export function ExecutionHistoryPage() {
-  const setCurrentRunId = useAutomationSessionStore((state) => state.setCurrentRunId);
+  const setCurrentRunId = useAutomationSessionStore(
+    (state) => state.setCurrentRunId,
+  );
 
   const [query, setQuery] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -206,10 +208,12 @@ export function ExecutionHistoryPage() {
       <section className="history-shell">
         <div className="history-hero">
           <p className="automation-deck-kicker">UDM Execution History</p>
-          <h1 className="automation-deck-title">Grouped by runId for cleaner auditing</h1>
+          <h1 className="automation-deck-title">
+            Grouped by runId for cleaner auditing
+          </h1>
           <p className="text-sm text-slate-600 mt-1">
-            Browse previous automation runs, inspect grouped events, and reopen any run
-            in the live logs view.
+            Browse previous automation runs, inspect grouped events, and reopen
+            any run in the live logs view.
           </p>
           <div className="mt-3 flex flex-wrap gap-2 text-xs">
             <span className="automation-chip automation-chip-primary">
@@ -235,7 +239,11 @@ export function ExecutionHistoryPage() {
               placeholder="Filter by runId, jobId, or latest message"
               className="form-input"
             />
-            <button type="button" onClick={() => void loadHistory()} className="btn">
+            <button
+              type="button"
+              onClick={() => void loadHistory()}
+              className="btn"
+            >
               <RefreshCw className="w-3.5 h-3.5 inline mr-1" /> Refresh
             </button>
             <button
@@ -258,9 +266,13 @@ export function ExecutionHistoryPage() {
 
           <div className="elements-scrollbar flex-1 min-h-0 overflow-auto space-y-2 pr-1">
             {isLoading ? (
-              <div className="text-sm text-slate-500">Loading execution history...</div>
+              <div className="text-sm text-slate-500">
+                Loading execution history...
+              </div>
             ) : filteredHistory.length === 0 ? (
-              <div className="text-sm text-slate-500">No execution runs found.</div>
+              <div className="text-sm text-slate-500">
+                No execution runs found.
+              </div>
             ) : (
               filteredHistory.map((run) => {
                 const isExpanded = expandedRunIds.has(run.runId);
@@ -283,11 +295,14 @@ export function ExecutionHistoryPage() {
                           <p className="font-mono text-sm text-slate-800 truncate">
                             {run.runId}
                           </p>
-                          <span className={toStatusClass(run.status)}>{run.status}</span>
+                          <span className={toStatusClass(run.status)}>
+                            {run.status}
+                          </span>
                         </div>
                         <div className="mt-1 text-xs text-slate-600 pl-6">
                           {run.jobId ? `job: ${run.jobId} · ` : ""}
-                          started: {formatDate(run.firstTs)} · last: {formatDate(run.lastTs)}
+                          started: {formatDate(run.firstTs)} · last:{" "}
+                          {formatDate(run.lastTs)}
                         </div>
                       </button>
 
@@ -300,7 +315,8 @@ export function ExecutionHistoryPage() {
                             setActiveRunModalId(run.runId);
                           }}
                         >
-                          <ExternalLink className="w-3.5 h-3.5 inline mr-1" /> Open
+                          <ExternalLink className="w-3.5 h-3.5 inline mr-1" />{" "}
+                          Open
                         </button>
                         <button
                           type="button"
@@ -310,7 +326,9 @@ export function ExecutionHistoryPage() {
                           title="Delete events for this run"
                         >
                           <Trash2 className="w-3.5 h-3.5 inline mr-1" />
-                          {deletingRunIds.has(run.runId) ? "Deleting..." : "Delete"}
+                          {deletingRunIds.has(run.runId)
+                            ? "Deleting..."
+                            : "Delete"}
                         </button>
                       </div>
                     </div>
@@ -319,13 +337,17 @@ export function ExecutionHistoryPage() {
                       <span>Total events: {run.totalEvents}</span>
                       <span>Warnings: {run.warnCount}</span>
                       <span>Errors: {run.errorCount}</span>
-                      <span className="truncate max-w-md">Latest: {run.latestMessage}</span>
+                      <span className="truncate max-w-md">
+                        Latest: {run.latestMessage}
+                      </span>
                     </div>
 
                     {isExpanded ? (
                       <div className="mt-3 pl-6 space-y-2">
                         {loadingRunId === run.runId ? (
-                          <div className="text-xs text-slate-500">Loading run events...</div>
+                          <div className="text-xs text-slate-500">
+                            Loading run events...
+                          </div>
                         ) : events.length === 0 ? (
                           <div className="text-xs text-slate-500">
                             No events returned for this run.
@@ -334,9 +356,15 @@ export function ExecutionHistoryPage() {
                           events.map((event) => (
                             <div key={event.id} className="history-event-item">
                               <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                                <span className="font-medium text-slate-700">{event.message}</span>
-                                <span className="text-slate-500">{formatDate(event.ts)}</span>
-                                <span className="text-slate-500">level: {event.level}</span>
+                                <span className="font-medium text-slate-700">
+                                  {event.message}
+                                </span>
+                                <span className="text-slate-500">
+                                  {formatDate(event.ts)}
+                                </span>
+                                <span className="text-slate-500">
+                                  level: {event.level}
+                                </span>
                                 {event.ctx?.taskId ? (
                                   <span className="text-slate-500">
                                     task: {event.ctx.taskId}
@@ -363,7 +391,11 @@ export function ExecutionHistoryPage() {
                 className="history-modal-overlay"
                 onClick={() => setActiveRunModalId(null)}
               />
-              <section className="history-modal" role="dialog" aria-modal="true">
+              <section
+                className="history-modal"
+                role="dialog"
+                aria-modal="true"
+              >
                 <header className="history-modal-header">
                   <div>
                     <p className="text-xs uppercase tracking-wider text-slate-300">

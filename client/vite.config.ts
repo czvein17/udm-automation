@@ -20,6 +20,19 @@ export default ({ mode }: { mode: string }) => {
       tailwindcss(),
     ],
 
+    resolve: {
+      alias: {
+        "@": path.resolve(__dirname, "src"),
+        "@styles": path.resolve(__dirname, "src/styles"),
+        "@assets": path.resolve(__dirname, "src/assets"),
+        "@layout": path.resolve(__dirname, "src/layout"),
+        "@layouts": path.resolve(__dirname, "src/layout"),
+        "@components": path.resolve(__dirname, "src/components"),
+        "@features": path.resolve(__dirname, "src/features"),
+        "@types": path.resolve(__dirname, "src/types"),
+      },
+    },
+
     server: {
       proxy: {
         "/api": {

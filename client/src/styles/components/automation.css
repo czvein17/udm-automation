@@ -1,0 +1,101 @@
+@layer components {
+  .automation-deck {
+    @apply col-span-2 h-full bg-white border shadow-sm rounded-2xl border-slate-200 p-4 flex items-center justify-between gap-4;
+    background: linear-gradient(120deg, #ffffff 0%, #f7f1fd 45%, #eef8fc 100%);
+    border-color: color-mix(in srgb, var(--color-wtwSecondary) 20%, #e2e8f0);
+  }
+
+  .automation-deck-kicker {
+    @apply text-[11px] font-semibold uppercase tracking-[0.18em];
+    color: color-mix(in srgb, var(--color-wtwPrimary) 70%, #334155);
+  }
+
+  .automation-deck-title {
+    @apply text-lg font-semibold truncate;
+    color: color-mix(in srgb, var(--color-wtwPrimary) 85%, #0f172a);
+  }
+
+  .automation-chip {
+    @apply inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium;
+  }
+
+  .automation-chip-primary {
+    background-color: var(--color-wtwPrimary);
+    color: #ffffff;
+  }
+
+  .automation-chip-secondary {
+    background-color: #ffffff;
+    color: color-mix(in srgb, var(--color-wtwPrimary) 72%, #334155);
+    border: 1px solid color-mix(in srgb, var(--color-wtwSecondary) 26%, #e2e8f0);
+  }
+
+  .automation-deck-label {
+    @apply block text-[11px] uppercase tracking-[0.14em] mb-1;
+    color: color-mix(in srgb, var(--color-wtwPrimary) 70%, #475569);
+  }
+
+  .automation-clear-btn {
+    @apply inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold rounded;
+    color: color-mix(in srgb, var(--color-wtwPrimary) 72%, #334155);
+    background: #ffffff;
+    border: 1px solid color-mix(in srgb, var(--color-wtwSecondary) 26%, #e2e8f0);
+  }
+
+  .automation-clear-btn:hover {
+    background: var(--color-wtwSecondary);
+    color: #ffffff;
+    border-color: var(--color-wtwSecondary);
+  }
+
+  .automation-empty {
+    @apply h-full min-h-0 border rounded border-dashed text-sm flex items-center justify-center;
+    color: color-mix(in srgb, var(--color-wtwPrimary) 58%, #475569);
+    border-color: color-mix(in srgb, var(--color-wtwSecondary) 30%, #cbd5e1);
+    background: linear-gradient(180deg, #ffffff 0%, #f9f2fe 100%);
+  }
+
+  .request-panel {
+    @apply flex flex-col h-full min-h-0 overflow-hidden rounded-2xl shadow-sm;
+    border: 1px solid color-mix(in srgb, var(--color-wtwSecondary) 22%, #e2e8f0);
+    background: linear-gradient(180deg, #ffffff 0%, #faf7fd 100%);
+  }
+
+  .request-tabs {
+    @apply relative flex shrink-0 border-b;
+    border-color: color-mix(in srgb, var(--color-wtwSecondary) 20%, #e2e8f0);
+    background: linear-gradient(180deg, #ffffff 0%, #f8f2fd 100%);
+  }
+
+  .request-tab-btn {
+    @apply flex-1 py-3 text-xs font-semibold uppercase tracking-wider transition-colors relative;
+    color: color-mix(in srgb, var(--color-wtwPrimary) 55%, #64748b);
+  }
+
+  .request-tab-btn:hover {
+    color: var(--color-wtwPrimary);
+    background: color-mix(in srgb, var(--color-wtwSecondary) 10%, #ffffff);
+  }
+
+  .request-tab-btn-active {
+    color: var(--color-wtwPrimary);
+  }
+
+  .request-tab-indicator {
+    @apply absolute bottom-0 left-0 h-0.5 transition-transform duration-200 ease-in-out rounded-xl;
+    background: linear-gradient(
+      90deg,
+      var(--color-wtwPrimary) 0%,
+      var(--color-wtwSecondary) 100%
+    );
+  }
+
+  .request-tab-content {
+    @apply flex-1 min-h-0;
+  }
+
+  .request-elements-pane {
+    @apply h-full min-h-0 p-2;
+    background: linear-gradient(180deg, #f8fafc 0%, #f7f1fd 100%);
+  }
+}

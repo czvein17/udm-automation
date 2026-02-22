@@ -1,8 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import { Request } from "../../features/UDMAutomations/pages/Request";
-import { LogsSection } from "../../features/UDMAutomations/pages/LogsSection";
-import { AutomationOverviewBar } from "../../features/UDMAutomations/components";
+import { Request } from "@features/UDMAutomations/pages/Request";
+import { LogsSection } from "@features/UDMAutomations/pages/LogsSection";
+import { AutomationOverviewBar } from "@features/UDMAutomations/components";
 
 export const Route = createFileRoute("/app/")({
   component: RouteComponent,
