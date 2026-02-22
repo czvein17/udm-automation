@@ -1,0 +1,1 @@
+DROP TABLE `reporter_run_summaries`;

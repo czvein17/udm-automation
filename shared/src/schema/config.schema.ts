@@ -5,9 +5,13 @@ export type ConfigFor = (typeof configForValues)[number];
 
 export const configSchema = z.object({
   id: z.string().uuid(),
-  configFor: z.enum(configForValues),
-  baseUrl: z.string().nullable().optional(),
-  surveyline: z.string().nullable().optional(),
+  configFor: z.enum(configForValues).default("udm"),
+  baseUrl: z
+    .string()
+    .default("https://axis.ehr.com/en-US/survey-setup/surveys")
+    .nullable()
+    .optional(),
+  surveyline: z.string().default("48").nullable().optional(),
   automationType: z
     .enum([
       "udm:open_elem",

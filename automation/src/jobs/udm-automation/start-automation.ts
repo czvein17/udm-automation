@@ -204,12 +204,6 @@ export const startAutomation = async (
           await appendTaskLog(task.id, [
             { status: "failed", action: `error: ${toUserErrorMessage(err)}` },
           ]);
-        } finally {
-          try {
-            await page.close();
-          } catch {
-            // ignore cleanup failures
-          }
         }
       }),
     );

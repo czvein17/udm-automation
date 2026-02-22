@@ -5,27 +5,33 @@ import type { CreateConfig } from "shared";
 
 import * as configRepo from "./config.repo";
 
+const DEFAULT_UDM_CONFIG = {
+  configFor: "udm",
+  baseUrl: "https://axis.ehr.com/en-US/survey-setup/surveys",
+  surveyline: "48",
+  automationType: "udm:open_elem",
+  translation: "English",
+} as const;
+
 export const createConfigService = async (
   payload: CreateConfig,
 ): Promise<Config | null> => {
-  if (!payload?.configFor) {
-    throw new Error("configFor is required");
-  }
+  const configFor = payload?.configFor ?? DEFAULT_UDM_CONFIG.configFor;
 
-  const existingConfig = await configRepo.getConfigFor(payload.configFor);
+  const existingConfig = await configRepo.getConfigFor(configFor);
   if (existingConfig) {
     throw new Error("Config already exists");
   }
 
   const newData: Config = {
     id: nanoid(),
-    configFor: payload.configFor as unknown as Config["configFor"],
-    baseUrl: payload.baseUrl ?? undefined,
-    surveyline: payload.surveyline ?? undefined,
+    configFor: configFor as unknown as Config["configFor"],
+    baseUrl: payload.baseUrl ?? DEFAULT_UDM_CONFIG.baseUrl,
+    surveyline: payload.surveyline ?? DEFAULT_UDM_CONFIG.surveyline,
 
-    automationType:
-      payload.automationType as unknown as Config["automationType"],
-    translation: payload.translation ?? undefined,
+    automationType: (payload.automationType ??
+      DEFAULT_UDM_CONFIG.automationType) as unknown as Config["automationType"],
+    translation: payload.translation ?? DEFAULT_UDM_CONFIG.translation,
   };
 
   return await configRepo.createConfig(newData);

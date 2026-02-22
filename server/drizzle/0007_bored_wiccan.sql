@@ -1,9 +1,9 @@
 PRAGMA foreign_keys=OFF;--> statement-breakpoint
 CREATE TABLE `__new_config` (
 	`id` text PRIMARY KEY NOT NULL,
-	`configFor` text NOT NULL,
-	`baseUrl` text,
-	`surveyline` text,
+	`configFor` text DEFAULT 'udm' NOT NULL,
+	`baseUrl` text DEFAULT 'https://axis.ehr.com/en-US/survey-setup/surveys',
+	`surveyline` text DEFAULT '48',
 	`automationType` text DEFAULT 'udm:open_elem' NOT NULL,
 	`translation` text DEFAULT 'English' NOT NULL
 );

@@ -58,10 +58,12 @@ export type TaskLog = z.infer<typeof taskLogSchema>;
 
 export const config = sqliteTable("config", {
   id: text("id").primaryKey().unique(),
-  configFor: text("configFor").notNull().unique(),
+  configFor: text("configFor").notNull().default("udm").unique(),
 
-  baseUrl: text("baseUrl"),
-  surveyline: text("surveyline"),
+  baseUrl: text("baseUrl").default(
+    "https://axis.ehr.com/en-US/survey-setup/surveys",
+  ),
+  surveyline: text("surveyline").default("48"),
 
   automationType: text("automationType").notNull().default("udm:open_elem"),
   translation: text("translation").notNull().default("English"),
@@ -112,9 +114,13 @@ export const configSchema = z.object({
   id: uuid(),
   configFor: z
     .enum(["udm", "axis", "youtube"])
+    .default("udm")
     .transform((val) => val as string),
-  baseUrl: string().nullable().optional(),
-  surveyline: string().nullable().optional(),
+  baseUrl: string()
+    .default("https://axis.ehr.com/en-US/survey-setup/surveys")
+    .nullable()
+    .optional(),
+  surveyline: string().default("48").nullable().optional(),
 
   automationType: z
     .enum([

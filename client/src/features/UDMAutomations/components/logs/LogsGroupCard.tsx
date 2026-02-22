@@ -18,7 +18,7 @@ export function LogsGroupCard({ group }: LogsGroupCardProps) {
   ];
 
   return (
-    <div className="logs-group-card pt-7">
+    <div className="logs-group-card ">
       <div className="absolute top-2 right-2 z-20 flex items-center gap-2 text-[11px] font-semibold text-slate-100">
         <span>Row #{group.rowIndex}</span>
         <span
@@ -49,7 +49,7 @@ export function LogsGroupCard({ group }: LogsGroupCardProps) {
         <div>
           <span className="logs-actions-label">ACTIONS:</span>
           {group.actions.length > 0 ? (
-            <ul className="logs-actions-list mt-1 ml-4 list-none">
+            <ul className="mt-1 ml-4 list-none text-amber-200">
               {group.actions.map((action) => (
                 <li key={action}>
                   <ChevronRight className="inline mr-1 w-3 h-3" /> {action}
