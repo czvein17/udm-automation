@@ -4,8 +4,9 @@ export type LogsWsMessage =
   | { event: "reporter:batch"; data: LogEvent[] }
   | { event: "reporter:line"; data: LogEvent };
 
-export const MAX_EVENTS = 100000;
+export const MAX_EVENTS = 20000;
 export const MAX_RETRIES = 5;
+export const STREAM_FLUSH_INTERVAL_MS = 60;
 
 export function capEvents(items: LogEvent[]) {
   if (items.length <= MAX_EVENTS) return items;
