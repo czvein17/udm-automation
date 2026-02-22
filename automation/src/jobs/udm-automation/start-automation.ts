@@ -205,10 +205,6 @@ export const startAutomation = async (
             { status: "failed", action: `error: ${toUserErrorMessage(err)}` },
           ]);
         } finally {
-          if (!config.autoCloseTaskPage) {
-            return;
-          }
-
           try {
             await page.close();
           } catch {

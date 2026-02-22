@@ -32,8 +32,6 @@ export const AutomationConfigTab = () => {
       surveyline: "",
       automationType: automationTypes[0],
       translation: "English",
-      autoCloseBrowser: false,
-      autoCloseTaskPage: false,
     }),
     [configFor],
   );
@@ -50,8 +48,6 @@ export const AutomationConfigTab = () => {
         surveyline: cfg.surveyline ?? "",
         automationType: cfg.automationType ?? automationTypes[0],
         translation: cfg.translation ?? "English",
-        autoCloseBrowser: cfg.autoCloseBrowser ?? false,
-        autoCloseTaskPage: cfg.autoCloseTaskPage ?? false,
         id: cfg.id,
       });
     } else {
@@ -70,8 +66,6 @@ export const AutomationConfigTab = () => {
       automationType: (form.automationType ??
         automationTypes[0]) as CreateConfig["automationType"],
       translation: form.translation ?? "English",
-      autoCloseBrowser: form.autoCloseBrowser ?? false,
-      autoCloseTaskPage: form.autoCloseTaskPage ?? false,
     };
 
     try {
@@ -109,7 +103,7 @@ export const AutomationConfigTab = () => {
   const fieldDefs: Array<{
     key: keyof ConfigWithId;
     label: string;
-    type: "input" | "select" | "boolean";
+    type: "input" | "select";
     placeholder?: string;
     options?: readonly string[] | string[];
     optionLabel?: (o: string) => string;
@@ -137,16 +131,6 @@ export const AutomationConfigTab = () => {
       optionLabel: (t: string) => automationTypeLabels[t] ?? t,
     },
     { key: "translation", label: "Translation", type: "input" },
-    {
-      key: "autoCloseTaskPage",
-      label: "Auto-close Task Page",
-      type: "boolean",
-    },
-    {
-      key: "autoCloseBrowser",
-      label: "Auto-close Browser",
-      type: "boolean",
-    },
   ];
 
   return (
@@ -204,7 +188,7 @@ export const AutomationConfigTab = () => {
               readOnly={!!f.readonly}
               placeholder={f.placeholder}
             />
-          ) : f.type === "select" ? (
+          ) : (
             <select
               id={`field-${String(f.key)}`}
               name={String(f.key)}
@@ -226,27 +210,6 @@ export const AutomationConfigTab = () => {
                   {f.optionLabel ? f.optionLabel(opt) : opt}
                 </option>
               ))}
-            </select>
-          ) : (
-            <select
-              id={`field-${String(f.key)}`}
-              name={String(f.key)}
-              className="form-input"
-              value={
-                ((form as unknown as Record<string, unknown>)[f.key as string] ??
-                false)
-                  ? "true"
-                  : "false"
-              }
-              onChange={(e) =>
-                onChange(
-                  f.key,
-                  (e.target.value === "true") as ConfigWithId[keyof ConfigWithId],
-                )
-              }
-            >
-              <option value="false">No</option>
-              <option value="true">Yes</option>
             </select>
           )}
         </div>

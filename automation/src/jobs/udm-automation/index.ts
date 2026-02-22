@@ -57,10 +57,6 @@ export async function runUdmAutomation(runId: string) {
     await logger.error("run_error", { err: String(err) });
     throw err;
   } finally {
-    if (!configSettin.autoCloseBrowser) {
-      return;
-    }
-
     try {
       await page.close();
     } catch {
