@@ -21,6 +21,8 @@
     "lint": "turbo lint",
     "type-check": "turbo type-check",
     "test": "turbo test",
+    "perf:reporter": "bun run scripts/perf/reporter-bench.ts",
+    "perf:capture": "bun run scripts/perf/reporter-bench.ts --out=artifacts/perf/reporter-bench.ndjson",
     "postinstall": "turbo build --filter=shared --filter=server"
   },
   "keywords": [
