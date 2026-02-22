@@ -9,7 +9,7 @@ import {
   X,
 } from "lucide-react";
 
-import { LogsTerminal } from "@features/UDMAutomations/components/LogsTerminal";
+import { LogsTerminal } from "@features/UDMAutomations/components/logs";
 import {
   fetchRunEvents,
   fetchRunHistory,

@@ -1,9 +1,11 @@
 import type { ColumnDef } from "@tanstack/react-table";
-import type { ElementRow } from "../types/elements.types";
-import { EditableTextCell } from "./EditableTextCells";
-import { type RowFieldErrors } from "../utils/elements.error";
 import type { TableMeta } from "@tanstack/react-table";
 import { Trash2 } from "lucide-react";
+
+import type { ElementRow } from "@features/UDMAutomations/types/elements.types";
+import type { RowFieldErrors } from "@features/UDMAutomations/utils/elements.error";
+
+import { EditableTextCell } from "./EditableTextCells";
 import { TableHeader } from "./TableHeader";
 type ElementsTableMeta = TableMeta<ElementRow> & {
   isSelected: (rowIndex: number) => boolean;

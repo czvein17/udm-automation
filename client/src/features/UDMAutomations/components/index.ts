@@ -1,6 +1,12 @@
-export { ElementsTab } from "./ElementsTab";
-export { elementColumns } from "./elements.columns";
-export { ElementsTable } from "./ElementsTable";
-export { EditableTextCell } from "./EditableTextCells";
-export { AutomationOverviewBar } from "./AutomationOverviewBar";
-export { StatusChip } from "./StatusChip";
+export { AutomationConfigTab } from "./config";
+export {
+  EditableTextCell,
+  elementColumns,
+  ElementsTab,
+  ElementsTabFooter,
+  ElementsTable,
+  ElementsToolbarButton,
+  TableHeader,
+} from "./elements";
+export { LogsTerminal } from "./logs";
+export { AutomationOverviewBar, StatusChip } from "./overview";

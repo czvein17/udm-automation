@@ -1,5 +1,5 @@
-import { ElementsTab } from "@features/UDMAutomations/components/ElementsTab";
-import { AutomationConfigTab } from "@features/UDMAutomations/components/AutomationConfigTab";
+import { AutomationConfigTab } from "@features/UDMAutomations/components/config";
+import { ElementsTab } from "@features/UDMAutomations/components/elements";
 import { useShallow } from "zustand/react/shallow";
 import {
   type AutomationTab,

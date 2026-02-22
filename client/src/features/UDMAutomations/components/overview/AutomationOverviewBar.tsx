@@ -11,7 +11,7 @@ import {
   selectSessionRunIdSlice,
   selectSessionTabSlice,
 } from "@features/UDMAutomations/store/automationUi.selectors";
-import { StatusChip } from "@features/UDMAutomations/components/StatusChip";
+import { StatusChip } from "./StatusChip";
 
 export function AutomationOverviewBar() {
   const { activeTab } = useAutomationSessionStore(useShallow(selectSessionTabSlice));

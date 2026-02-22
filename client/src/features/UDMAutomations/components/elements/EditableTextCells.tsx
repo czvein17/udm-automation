@@ -8,7 +8,7 @@ import {
   useState,
 } from "react";
 import type { Table, Row, Column } from "@tanstack/react-table";
-import type { ElementRow } from "../types/elements.types";
+import type { ElementRow } from "@features/UDMAutomations/types/elements.types";
 
 type UpdateDataFn = (rowIndex: number, columnId: string, value: string) => void;
 
@@ -44,8 +44,6 @@ export function EditableTextCellInner({
   placeholder,
   error,
 }: Props) {
-  console.log("Rendering Text Field For: " + placeholder + " " + value);
-
   const initial = (value ?? "").toString();
   const [local, setLocal] = useState(initial);
 
@@ -127,12 +125,12 @@ export function EditableTextCellInner({
         onBlur={onBlur}
         onKeyDown={onKeyDown}
         className={[
-          "w-full bg-[#f8fafc] outline-none font-medium",
-          "px-2 py-1 rounded",
-          "text-[11px] text-slate-600",
-          "ring-1",
-          error ? "ring-red-400" : "ring-slate-300",
-          "focus:ring-wtwSecondary",
+          "w-full h-7 box-border bg-[#f8fafc] outline-none font-medium",
+          "px-2 rounded",
+          "text-[11px] leading-4 text-slate-600",
+          "border",
+          error ? "border-red-400" : "border-slate-300",
+          "focus:border-wtwSecondary focus:ring-0",
         ].join(" ")}
         required={required}
       />

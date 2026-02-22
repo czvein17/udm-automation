@@ -1,6 +1,6 @@
 import { flexRender, type Table } from "@tanstack/react-table";
 import { useEffect, useRef, useState, type CSSProperties } from "react";
-import { type ElementRow } from "../types/elements.types";
+import type { ElementRow } from "@features/UDMAutomations/types/elements.types";
 
 type Props = {
   table: Table<ElementRow>;
@@ -54,7 +54,7 @@ export function ElementsTable({ table }: Props) {
   );
 
   return (
-    <div className="flex-1 min-h-0 bg-white border rounded-lg shadow-xs border-slate-200 flex flex-col space-y-0.5">
+    <div className="flex-1 min-h-0 bg-white border rounded-lg shadow-xs border-slate-200 flex flex-col">
       <div
         className="shrink-0 elements-header-wrap border-b border-slate-200"
         style={
@@ -134,7 +134,7 @@ export function ElementsTable({ table }: Props) {
         </table>
 
         {/* optional bottom space like "sheet" */}
-        <div className="h-24" />
+        <div className="h-10" />
       </div>
     </div>
   );

@@ -1,4 +1,4 @@
-import { LogsTerminal } from "@features/UDMAutomations/components/LogsTerminal";
+import { LogsTerminal } from "@features/UDMAutomations/components/logs";
 import { useAutomationSessionStore } from "@features/UDMAutomations/store/automationUi.store";
 
 export const LogsSection = () => {

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useGetConfig, useConfigMutations } from "../hooks/useConfigServices";
+import { useGetConfig, useConfigMutations } from "@features/UDMAutomations/hooks/useConfigServices";
 import type { CreateConfig } from "shared";
 import { configForValues } from "shared/dist/schema/config.schema";
 type ConfigWithId = CreateConfig & { id?: string; name?: string };
