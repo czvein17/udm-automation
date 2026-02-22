@@ -140,7 +140,7 @@ export function elementColumns(opts: {
       cell: ({ row, table }) => {
         const meta = table.options.meta as ElementsTableMeta | undefined;
         return (
-          <div className="flex items-center justify-end h-full" title="delete">
+          <div className="flex items-center h-full" title="delete">
             <button
               onClick={() => meta?.deleteRow?.(row.index)}
               className="p-1 rounded cursor-pointer text-slate-500 hover:text-red-500"

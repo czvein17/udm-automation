@@ -36,7 +36,8 @@ type ElementsTableMeta = HookMeta;
 // Known header aliases to map common Excel column names to ElementRow keys.
 const HEADER_ALIASES: Record<
   string,
-  keyof import("@features/UDMAutomations/types/elements.types").ElementRow | null
+  | keyof import("@features/UDMAutomations/types/elements.types").ElementRow
+  | null
 > = {
   // main fields
   fieldname: "fieldName",
@@ -132,6 +133,17 @@ export function ElementsTab() {
     submitElementsList(parsed.data);
   };
 
+  const isEmptyRow = (row: ElementRow) => {
+    const isEmpty = (v?: string) => !v || String(v).trim() === "";
+    return (
+      isEmpty(row.fieldName) &&
+      isEmpty(row.elementId) &&
+      isEmpty(row.tableName) &&
+      isEmpty(row.elementName) &&
+      isEmpty(row.displayName)
+    );
+  };
+
   async function handleFileInputChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -190,7 +202,13 @@ export function ElementsTab() {
         headerToField[h] = sub ?? null;
       }
 
-      let nextId = data.length ? data[data.length - 1].id + 1 : 1;
+      const firstEmptyRowIndex = data.findIndex(isEmptyRow);
+      let nextId =
+        firstEmptyRowIndex >= 0
+          ? data[firstEmptyRowIndex].id
+          : data.length
+            ? data[data.length - 1].id + 1
+            : 1;
       const mapped = raw.map((r) => {
         const base = makeEmptyRow(nextId++);
         for (const key of Object.keys(r)) {
@@ -209,7 +227,16 @@ export function ElementsTab() {
       }
 
       setErrors({});
-      setData((prev) => [...prev, ...parsed.data]);
+      setData((prev) => {
+        if (firstEmptyRowIndex >= 0) {
+          return [
+            ...prev.slice(0, firstEmptyRowIndex),
+            ...parsed.data,
+            ...prev.slice(firstEmptyRowIndex + 1),
+          ];
+        }
+        return [...prev, ...parsed.data];
+      });
     } catch (err) {
       console.error("Failed to import spreadsheet", err);
     } finally {

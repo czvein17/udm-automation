@@ -92,4 +92,8 @@
   .card {
     @apply h-full bg-white border shadow-sm rounded-2xl border-slate-200;
   }
+
+  .elements-header-wrap {
+    padding-right: var(--elements-scrollbar-compensation, 0px);
+  }
 }

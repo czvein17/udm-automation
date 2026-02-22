@@ -1,4 +1,5 @@
 import { flexRender, type Table } from "@tanstack/react-table";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { type ElementRow } from "../types/elements.types";
 
 type Props = {
@@ -6,13 +7,67 @@ type Props = {
 };
 
 export function ElementsTable({ table }: Props) {
+  const bodyRef = useRef<HTMLDivElement | null>(null);
+  const [scrollbarWidth, setScrollbarWidth] = useState(0);
+
+  useEffect(() => {
+    const measure = () => {
+      const el = bodyRef.current;
+      if (!el) return;
+      setScrollbarWidth(el.offsetWidth - el.clientWidth);
+    };
+
+    measure();
+
+    const el = bodyRef.current;
+    if (!el) return;
+
+    const resizeObserver = new ResizeObserver(() => {
+      measure();
+    });
+
+    resizeObserver.observe(el);
+    window.addEventListener("resize", measure);
+
+    return () => {
+      resizeObserver.disconnect();
+      window.removeEventListener("resize", measure);
+    };
+  }, []);
+
+  const renderColGroup = (count: number) => (
+    <colgroup>
+      {Array.from({ length: count }).map((_, index) => {
+        const isFirstCol = index === 0;
+        const isLastCol = index === count - 1;
+
+        return (
+          <col
+            key={`col-${index}`}
+            style={{
+              width: isFirstCol ? "56px" : isLastCol ? "64px" : undefined,
+            }}
+          />
+        );
+      })}
+    </colgroup>
+  );
+
   return (
-    <div className="flex-1 min-h-0 bg-white border rounded-lg shadow-xs border-slate-200 flex flex-col">
-      <div className="shrink-0">
+    <div className="flex-1 min-h-0 bg-white border rounded-lg shadow-xs border-slate-200 flex flex-col space-y-0.5">
+      <div
+        className="shrink-0 elements-header-wrap border-b border-slate-200"
+        style={
+          {
+            "--elements-scrollbar-compensation": `${scrollbarWidth}px`,
+          } as CSSProperties
+        }
+      >
         <table className="w-full border-collapse table-fixed">
+          {renderColGroup(table.getAllLeafColumns().length)}
           <thead>
             {table.getHeaderGroups().map((hg) => (
-              <tr key={hg.id} className="border-b border-slate-200">
+              <tr key={hg.id} className="border-slate-200">
                 {hg.headers.map((header, colIndex) => {
                   const isFirstCol = colIndex === 0;
                   const isLastCol = colIndex === hg.headers.length - 1;
@@ -21,9 +76,10 @@ export function ElementsTable({ table }: Props) {
                     <th
                       key={header.id}
                       className={[
-                        "px-2 py-2 text-left text-xs font-semibold text-slate-600 tracking-wide",
-                        isFirstCol ? "pl-4 w-10" : "",
-                        isLastCol ? "pr-4 w-10" : "",
+                        "py-2 text-xs font-semibold text-slate-600 tracking-wide",
+                        isFirstCol ? "text-center" : "",
+                        isLastCol ? "text-center" : "",
+                        !isFirstCol && !isLastCol ? "px-3 text-left" : "",
                       ].join(" ")}
                     >
                       {flexRender(
@@ -39,8 +95,12 @@ export function ElementsTable({ table }: Props) {
         </table>
       </div>
 
-      <div className="elements-scrollbar flex-1 min-h-0 overflow-auto">
+      <div
+        ref={bodyRef}
+        className="elements-scrollbar flex-1 min-h-0 overflow-auto"
+      >
         <table className="w-full border-collapse table-fixed">
+          {renderColGroup(table.getAllLeafColumns().length)}
           <tbody>
             {table.getRowModel().rows.map((row) => {
               const cells = row.getVisibleCells();
@@ -50,9 +110,10 @@ export function ElementsTable({ table }: Props) {
                     const isFirstCol = colIndex === 0;
                     const isLastCol = colIndex === cells.length - 1;
                     const cls = [
-                      "px-2 py-2 ",
-                      isFirstCol ? "pl-4 w-10" : "",
-                      isLastCol ? "pr-4 w-10 py-3" : "",
+                      "py-2",
+                      isFirstCol ? "text-center" : "",
+                      isLastCol ? "text-center py-3" : "",
+                      !isFirstCol && !isLastCol ? "px-3" : "",
                       "align-top",
                     ]
                       .filter(Boolean)
