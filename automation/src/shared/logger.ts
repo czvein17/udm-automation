@@ -43,6 +43,8 @@ export type AutomationLogger = ReturnType<typeof makeLogger>;
 const BAR = "────────────────────────────────────────────────────────────";
 const LEVEL_WIDTH = 5;
 const LABEL_WIDTH = 20;
+const MAX_PENDING_TRANSPORT = 64;
+const pendingTransport = new Set<Promise<void>>();
 
 function apiBaseUrl() {
   return process.env.BHVR_API_BASE_URL || "http://localhost:3000";
@@ -112,14 +114,25 @@ async function emit(
   else if (level === "warn") console.warn(line);
   else console.log(line);
 
-  await fetch(
+  const transportPromise = fetch(
     `${apiBaseUrl()}/api/v1/reporter/runs/${encodeURIComponent(base.runId)}/events`,
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     },
-  ).catch(() => undefined);
+  )
+    .then(() => undefined)
+    .catch(() => undefined)
+    .finally(() => {
+      pendingTransport.delete(transportPromise);
+    });
+
+  pendingTransport.add(transportPromise);
+
+  if (pendingTransport.size > MAX_PENDING_TRANSPORT) {
+    await Promise.race(pendingTransport);
+  }
 }
 
 export function printHeader(options: HeaderOptions) {

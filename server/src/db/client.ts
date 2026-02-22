@@ -50,6 +50,47 @@ void (async () => {
         seq INTEGER NOT NULL
       );
     `);
+
+    await (client as any).execute(`
+      CREATE INDEX IF NOT EXISTS idx_task_logs_task_id
+      ON task_logs(taskId);
+    `);
+
+    await (client as any).execute(`
+      CREATE INDEX IF NOT EXISTS idx_automation_logs_run_seq
+      ON automation_logs(runId, seq);
+    `);
+
+    await (client as any).execute(`
+      CREATE INDEX IF NOT EXISTS idx_automation_logs_run_ts
+      ON automation_logs(runId, ts);
+    `);
+
+    await (client as any).execute(`
+      CREATE TABLE IF NOT EXISTS reporter_run_summaries (
+        runId TEXT PRIMARY KEY,
+        jobId TEXT NULL,
+        runnerId TEXT NULL,
+        firstTs TEXT NOT NULL,
+        lastTs TEXT NOT NULL,
+        totalEvents INTEGER NOT NULL DEFAULT 0,
+        errorCount INTEGER NOT NULL DEFAULT 0,
+        warnCount INTEGER NOT NULL DEFAULT 0,
+        status TEXT NOT NULL DEFAULT 'running',
+        latestMessage TEXT NOT NULL,
+        lastSeq INTEGER NOT NULL DEFAULT 0
+      );
+    `);
+
+    await (client as any).execute(`
+      CREATE INDEX IF NOT EXISTS idx_reporter_run_summaries_last_seq
+      ON reporter_run_summaries(lastSeq);
+    `);
+
+    await (client as any).execute(`
+      CREATE INDEX IF NOT EXISTS idx_reporter_run_summaries_last_ts
+      ON reporter_run_summaries(lastTs);
+    `);
   } catch (e) {
     console.warn("Could not ensure tasks table exists:", e);
   }

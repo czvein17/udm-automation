@@ -1,9 +1,13 @@
 import { db } from "@server/db/client";
-import { automationLogs } from "@server/db/schema";
+import { automationLogs, reporterRunSummaries } from "@server/db/schema";
 import { and, desc, eq, lt, sql } from "drizzle-orm";
 import type { LogEvent } from "./logs.schema";
 
 type LogRow = typeof automationLogs.$inferSelect;
+type SummaryRow = typeof reporterRunSummaries.$inferSelect;
+
+const runSeqCache = new Map<string, number>();
+let seqMutex: Promise<void> = Promise.resolve();
 
 function isBusyError(error: unknown) {
   const message =
@@ -81,6 +85,13 @@ function toLogEvent(row: LogRow): LogEvent {
 }
 
 async function getNextSeq(runId: string): Promise<number> {
+  const cached = runSeqCache.get(runId);
+  if (cached !== undefined) {
+    const next = cached + 1;
+    runSeqCache.set(runId, next);
+    return next;
+  }
+
   const rows = await withBusyRetry(() =>
     db
       .select({ maxSeq: sql<number>`coalesce(max(${automationLogs.seq}), 0)` })
@@ -89,11 +100,133 @@ async function getNextSeq(runId: string): Promise<number> {
   );
 
   const maxSeq = rows[0]?.maxSeq ?? 0;
-  return maxSeq + 1;
+  const next = maxSeq + 1;
+  runSeqCache.set(runId, next);
+  return next;
+}
+
+async function reserveNextSeq(runId: string): Promise<number> {
+  let release!: () => void;
+  const current = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+
+  const previous = seqMutex;
+  seqMutex = seqMutex.then(() => current);
+
+  await previous;
+
+  try {
+    return await getNextSeq(runId);
+  } finally {
+    release();
+  }
+}
+
+type ReporterRunSummary = {
+  runId: string;
+  jobId?: string;
+  runnerId?: string;
+  firstTs: string;
+  lastTs: string;
+  totalEvents: number;
+  errorCount: number;
+  warnCount: number;
+  status: "ok" | "fail" | "running";
+  latestMessage: string;
+};
+
+function toSummaryStatus(value: unknown): ReporterRunSummary["status"] {
+  const status = String(value ?? "").toLowerCase();
+  if (status === "ok" || status === "fail") return status;
+  return "running";
+}
+
+function getEventSummaryStatus(event: LogEvent): ReporterRunSummary["status"] {
+  if (event.message !== "row_end") return "running";
+
+  const status =
+    event.meta && typeof event.meta === "object" && "status" in event.meta
+      ? (event.meta as Record<string, unknown>).status
+      : undefined;
+
+  return toSummaryStatus(status);
+}
+
+function mapSummaryRow(row: SummaryRow): ReporterRunSummary {
+  return {
+    runId: row.runId,
+    jobId: row.jobId ?? undefined,
+    runnerId: row.runnerId ?? undefined,
+    firstTs: row.firstTs,
+    lastTs: row.lastTs,
+    totalEvents: row.totalEvents,
+    errorCount: row.errorCount,
+    warnCount: row.warnCount,
+    status: toSummaryStatus(row.status),
+    latestMessage: row.latestMessage,
+  };
+}
+
+async function upsertRunSummary(event: LogEvent, seq: number) {
+  const existing = await withBusyRetry(() =>
+    db
+      .select()
+      .from(reporterRunSummaries)
+      .where(eq(reporterRunSummaries.runId, event.runId))
+      .limit(1),
+  );
+
+  const current = existing[0];
+  const eventStatus = getEventSummaryStatus(event);
+
+  if (!current) {
+    await withBusyRetry(() =>
+      db.insert(reporterRunSummaries).values({
+        runId: event.runId,
+        jobId: event.jobId ?? null,
+        runnerId: event.runnerId ?? null,
+        firstTs: event.ts,
+        lastTs: event.ts,
+        totalEvents: 1,
+        errorCount: event.level === "error" ? 1 : 0,
+        warnCount: event.level === "warn" ? 1 : 0,
+        status: eventStatus,
+        latestMessage: event.message,
+        lastSeq: seq,
+      }),
+    );
+    return;
+  }
+
+  const nextStatus: ReporterRunSummary["status"] =
+    current.status === "fail" || eventStatus === "fail"
+      ? "fail"
+      : eventStatus === "ok"
+        ? "ok"
+        : toSummaryStatus(current.status);
+
+  await withBusyRetry(() =>
+    db
+      .update(reporterRunSummaries)
+      .set({
+        jobId: current.jobId ?? event.jobId ?? null,
+        runnerId: current.runnerId ?? event.runnerId ?? null,
+        firstTs: event.ts < current.firstTs ? event.ts : current.firstTs,
+        lastTs: event.ts > current.lastTs ? event.ts : current.lastTs,
+        totalEvents: current.totalEvents + 1,
+        errorCount: current.errorCount + (event.level === "error" ? 1 : 0),
+        warnCount: current.warnCount + (event.level === "warn" ? 1 : 0),
+        status: nextStatus,
+        latestMessage: event.message,
+        lastSeq: Math.max(current.lastSeq, seq),
+      })
+      .where(eq(reporterRunSummaries.runId, event.runId)),
+  );
 }
 
 export async function insertLog(event: LogEvent) {
-  const seq = await getNextSeq(event.runId);
+  const seq = await reserveNextSeq(event.runId);
   const id = event.id || globalThis.crypto.randomUUID();
 
   await withBusyRetry(() =>
@@ -117,6 +250,15 @@ export async function insertLog(event: LogEvent) {
       seq,
     }),
   );
+
+  try {
+    await upsertRunSummary({ ...event, id }, seq);
+  } catch (error) {
+    console.warn("Reporter run summary update failed", {
+      runId: event.runId,
+      err: error instanceof Error ? error.message : String(error),
+    });
+  }
 
   return { ...event, id, seq };
 }
@@ -145,19 +287,6 @@ export async function getLogs(runId: string, cursor?: number, limit = 200) {
   };
 }
 
-type ReporterRunSummary = {
-  runId: string;
-  jobId?: string;
-  runnerId?: string;
-  firstTs: string;
-  lastTs: string;
-  totalEvents: number;
-  errorCount: number;
-  warnCount: number;
-  status: "ok" | "fail" | "running";
-  latestMessage: string;
-};
-
 function safeJsonParse(value: string | null) {
   if (!value) return null;
   try {
@@ -168,8 +297,19 @@ function safeJsonParse(value: string | null) {
 }
 
 export async function getRunSummaries(limit = 80, scanLimit = 5000) {
-  const safeScanLimit = Math.min(Math.max(scanLimit, 100), 10000);
   const safeLimit = Math.min(Math.max(limit, 1), 500);
+
+  const summaryRows = await db
+    .select()
+    .from(reporterRunSummaries)
+    .orderBy(desc(reporterRunSummaries.lastSeq))
+    .limit(safeLimit);
+
+  if (summaryRows.length > 0) {
+    return summaryRows.map(mapSummaryRow);
+  }
+
+  const safeScanLimit = Math.min(Math.max(scanLimit, 100), 10000);
 
   const rows = await db
     .select()
@@ -181,16 +321,21 @@ export async function getRunSummaries(limit = 80, scanLimit = 5000) {
 
   for (const row of rows) {
     const existing = grouped.get(row.runId);
-    const parsedMeta = safeJsonParse(row.metaJson);
-    const eventMeta =
-      parsedMeta && "meta" in parsedMeta
-        ? (parsedMeta.meta as Record<string, unknown> | undefined)
-        : parsedMeta;
     const isRowEnd = row.message === "row_end";
-    const rowEndStatus =
-      isRowEnd && eventMeta && "status" in eventMeta
-        ? String(eventMeta.status)
-        : undefined;
+    let rowEndStatus: string | undefined;
+
+    if (isRowEnd) {
+      const parsedMeta = safeJsonParse(row.metaJson);
+      const eventMeta =
+        parsedMeta && "meta" in parsedMeta
+          ? (parsedMeta.meta as Record<string, unknown> | undefined)
+          : parsedMeta;
+
+      rowEndStatus =
+        eventMeta && "status" in eventMeta
+          ? String(eventMeta.status)
+          : undefined;
+    }
 
     if (!existing) {
       grouped.set(row.runId, {
@@ -237,8 +382,14 @@ export async function getRunSummaries(limit = 80, scanLimit = 5000) {
 
 export async function deleteLogsForRun(runId: string) {
   await db.delete(automationLogs).where(eq(automationLogs.runId, runId));
+  await db
+    .delete(reporterRunSummaries)
+    .where(eq(reporterRunSummaries.runId, runId));
+  runSeqCache.delete(runId);
 }
 
 export async function deleteAllLogs() {
   await db.delete(automationLogs);
+  await db.delete(reporterRunSummaries);
+  runSeqCache.clear();
 }

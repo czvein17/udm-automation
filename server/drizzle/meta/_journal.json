@@ -64,6 +64,13 @@
       "when": 1771433879138,
       "tag": "0008_wide_killraven",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "6",
+      "when": 1771785600000,
+      "tag": "0009_curly_goblin_queen",
+      "breakpoints": true
     }
   ]
 }

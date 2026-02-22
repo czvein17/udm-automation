@@ -42,6 +42,22 @@ export type LogsDisplayModel = {
   globalIssues: string[];
 };
 
+type TaskGroupAccumulator = {
+  group: TaskGroup;
+  actionSet: Set<string>;
+  issueSet: Set<string>;
+};
+
+export type LogsDisplayAccumulator = {
+  runId: string;
+  processedCount: number;
+  header: HeaderInfo;
+  groups: Map<string, TaskGroupAccumulator>;
+  globalIssueSet: Set<string>;
+  globalIssues: string[];
+  nextFallbackRowIndex: number;
+};
+
 function safeJsonParse<T>(value?: string): T | null {
   if (!value) return null;
   const text = value.trim();
@@ -708,20 +724,260 @@ function extractHeaderInfo(rows: DisplayRow[], runId: string): HeaderInfo {
   return info;
 }
 
+function applyHeaderInfoFromRow(info: HeaderInfo, row: DisplayRow) {
+  if (row.messageKey === "run_start") {
+    const job = detailValue(row, "jobId");
+    const run = detailValue(row, "runId");
+    const runner = detailValue(row, "runnerId");
+    const started = detailValue(row, "ts");
+    const surveyline = detailValue(row, "config.surveyline");
+    const type = detailValue(row, "config.automationType");
+    const lang = detailValue(row, "config.translation");
+
+    info.job = job ?? info.job;
+    info.run = run ?? info.run;
+    info.runner = runner ?? info.runner;
+    info.started = started ?? info.started;
+
+    const configParts = [
+      surveyline ? `surveyline=${surveyline}` : undefined,
+      type ? `type=${type}` : undefined,
+      lang ? `lang=${lang}` : undefined,
+    ].filter(Boolean);
+
+    if (configParts.length > 0) {
+      info.config = configParts.join(" | ");
+    }
+
+    return;
+  }
+
+  const line = row.title.trim();
+  let match: RegExpMatchArray | null = null;
+
+  match = line.match(/^Job\s*:\s*(.+)$/i);
+  if (match) {
+    info.job = match[1];
+    return;
+  }
+  match = line.match(/^Run(?:\s*ID)?\s*:\s*(.+)$/i);
+  if (match) {
+    info.run = match[1];
+    return;
+  }
+  match = line.match(/^Runner\s*:\s*(.+)$/i);
+  if (match) {
+    info.runner = match[1];
+    return;
+  }
+  match = line.match(/^Started\s*:\s*(.+)$/i);
+  if (match) {
+    info.started = match[1];
+    return;
+  }
+  match = line.match(/^Config\s*:\s*(.+)$/i);
+  if (match) {
+    info.config = match[1];
+  }
+}
+
+function applyEventRowToAccumulator(
+  row: DisplayRow,
+  accumulator: LogsDisplayAccumulator,
+) {
+  if (row.level === "error" && !groupKeyForRow(row)) {
+    const issue = sanitizeIssueText(
+      detailValue(row, "err") ?? row.subtitle ?? row.title,
+    );
+
+    if (issue && !accumulator.globalIssueSet.has(issue)) {
+      accumulator.globalIssueSet.add(issue);
+      accumulator.globalIssues.push(issue);
+    }
+  }
+
+  if (row.kind !== "event") return;
+
+  const fieldName = row.ctx?.fieldName;
+  const elementId = row.ctx?.elementId;
+  const elementName = row.ctx?.elementName;
+  const displayName = row.ctx?.displayName;
+  const tableName = row.ctx?.tableName;
+
+  const key = groupKeyForRow(row);
+  if (!key) return;
+
+  const parsedRowIndex =
+    toRowIndex(row.ctx?.rowIndex) ?? toRowIndex(detailValue(row, "rowIndex"));
+
+  const current =
+    accumulator.groups.get(key) ??
+    ({
+      group: {
+        key,
+        taskId: undefined,
+        rowIndex: parsedRowIndex ?? accumulator.nextFallbackRowIndex,
+        fieldName,
+        elementId,
+        elementName,
+        displayName,
+        tableName,
+        url: undefined,
+        status: undefined,
+        actions: [],
+        issues: [],
+      },
+      actionSet: new Set<string>(),
+      issueSet: new Set<string>(),
+    } satisfies TaskGroupAccumulator);
+
+  if (!accumulator.groups.has(key) && parsedRowIndex === undefined) {
+    accumulator.nextFallbackRowIndex += 1;
+  }
+
+  const taskId = row.ctx?.taskId ?? detailValue(row, "taskId");
+  const rowIndex = parsedRowIndex;
+  current.group.taskId = current.group.taskId ?? taskId;
+  if (rowIndex !== undefined) {
+    current.group.rowIndex = rowIndex;
+  }
+  current.group.fieldName = current.group.fieldName ?? fieldName;
+  current.group.elementId = current.group.elementId ?? elementId;
+  current.group.elementName = current.group.elementName ?? elementName;
+  current.group.displayName = current.group.displayName ?? displayName;
+  current.group.tableName = current.group.tableName ?? tableName;
+
+  const url = detailValue(row, "url") ?? row.subtitle;
+  if (!current.group.url && row.title === "Navigate" && url) {
+    current.group.url = url;
+  }
+
+  let action: string | undefined;
+  switch (row.messageKey) {
+    case "row_step":
+      action = formatActionFromRowStep(row);
+      break;
+    case "row_end": {
+      const status = (detailValue(row, "status") ?? "").toLowerCase();
+      if (status === "ok" || status === "fail") {
+        current.group.status = status;
+      }
+      break;
+    }
+    case "navigate":
+      action = `Navigate${current.group.url ? `: ${current.group.url}` : ""}`;
+      break;
+    case "element_status": {
+      const status = detailValue(row, "status") ?? row.subtitle ?? "Unknown";
+      action = `Element Status: ${toTitleCase(status)}`;
+      break;
+    }
+    case "language_select_attempt": {
+      const translation =
+        detailValue(row, "translation") ?? row.subtitle ?? "Unknown";
+      action = `Language Select: ${translation}`;
+      break;
+    }
+    case "language_selected": {
+      const selected = (detailValue(row, "selected") ?? "true").toLowerCase();
+      action = `Language Selected: ${selected === "true" ? "Yes" : "No"}`;
+      break;
+    }
+    case "automation_action": {
+      const rowAction = detailValue(row, "action") ?? row.subtitle ?? "unknown";
+      action = `Automation Action: ${rowAction}`;
+      break;
+    }
+    case "automation_action_skipped": {
+      const skipped =
+        detailValue(row, "automationType") ?? row.subtitle ?? "unknown";
+      action = `Automation Skipped: ${skipped}`;
+      break;
+    }
+    default:
+      action = undefined;
+      break;
+  }
+
+  if (action && !current.actionSet.has(action)) {
+    current.actionSet.add(action);
+    current.group.actions.push(action);
+  }
+
+  if (row.level === "error") {
+    const issue = sanitizeIssueText(
+      detailValue(row, "err") ?? row.subtitle ?? row.title,
+    );
+    if (issue && !current.issueSet.has(issue)) {
+      current.issueSet.add(issue);
+      current.group.issues.push(issue);
+    }
+  }
+
+  accumulator.groups.set(key, current);
+}
+
+export function createLogsDisplayAccumulator(runId: string): LogsDisplayAccumulator {
+  return {
+    runId,
+    processedCount: 0,
+    header: { run: runId },
+    groups: new Map<string, TaskGroupAccumulator>(),
+    globalIssueSet: new Set<string>(),
+    globalIssues: [],
+    nextFallbackRowIndex: 1,
+  };
+}
+
+export function appendLogsDisplayEvents(
+  accumulator: LogsDisplayAccumulator,
+  items: LogEvent[],
+  startIndex: number,
+) {
+  for (let index = startIndex; index < items.length; index += 1) {
+    const row = toDisplayRow(items[index]!, index);
+    if (!row) continue;
+
+    if (row.kind === "header") {
+      applyHeaderInfoFromRow(accumulator.header, row);
+      continue;
+    }
+
+    if (row.kind === "noise") continue;
+    applyEventRowToAccumulator(row, accumulator);
+  }
+
+  accumulator.processedCount = items.length;
+}
+
+export function toLogsDisplayModel(
+  accumulator: LogsDisplayAccumulator,
+): LogsDisplayModel {
+  return {
+    header: accumulator.header,
+    groups: Array.from(accumulator.groups.values()).map((entry) => entry.group),
+    globalIssues: [...accumulator.globalIssues],
+  };
+}
+
 export function buildLogsDisplayModel(
   items: LogEvent[],
   runId: string,
 ): LogsDisplayModel {
-  const normalized = items
-    .map((item, index) => toDisplayRow(item, index))
-    .filter((row): row is DisplayRow => row !== null);
+  const normalized: DisplayRow[] = [];
+  for (let index = 0; index < items.length; index += 1) {
+    const row = toDisplayRow(items[index]!, index);
+    if (row) normalized.push(row);
+  }
 
   const compacted = compactStackTrace(normalized);
   const header = extractHeaderInfo(compacted, runId);
 
-  const rows = compacted.filter(
-    (row) => row.kind !== "header" && row.kind !== "noise",
-  );
+  const rows: DisplayRow[] = [];
+  for (const row of compacted) {
+    if (row.kind === "header" || row.kind === "noise") continue;
+    rows.push(row);
+  }
 
   const { groups, globalIssues } = buildTaskGroups(rows);
 

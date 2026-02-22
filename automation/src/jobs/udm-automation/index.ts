@@ -56,5 +56,23 @@ export async function runUdmAutomation(runId: string) {
   } catch (err) {
     await logger.error("run_error", { err: String(err) });
     throw err;
+  } finally {
+    try {
+      await page.close();
+    } catch {
+      // ignore cleanup failures
+    }
+
+    try {
+      await context.close();
+    } catch {
+      // ignore cleanup failures
+    }
+
+    try {
+      await browser.close();
+    } catch {
+      // ignore cleanup failures
+    }
   }
 }

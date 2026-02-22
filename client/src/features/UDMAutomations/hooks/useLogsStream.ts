@@ -7,6 +7,7 @@ import {
   MAX_RETRIES,
   parseWsMessage,
   reconnectDelayMs,
+  STREAM_FLUSH_INTERVAL_MS,
   wsUrlForRun,
 } from "./useLogsStream.utils";
 
@@ -22,6 +23,8 @@ export function useLogsStream(runId: string, initialLimit = 200) {
   const wsRef = useRef<WebSocket | null>(null);
   const retriesRef = useRef(0);
   const reconnectTimerRef = useRef<number | null>(null);
+  const flushTimerRef = useRef<number | null>(null);
+  const pendingEventsRef = useRef<LogEvent[]>([]);
   const allowReconnectRef = useRef(true);
   const inFlightCursorRef = useRef<number | null>(null);
   const loadedCursorRef = useRef(new Set<number>());
@@ -33,13 +36,43 @@ export function useLogsStream(runId: string, initialLimit = 200) {
     }
   };
 
-  const pushOne = useCallback((event: LogEvent) => {
-    setItems((prev) => capEvents([...prev, event]));
-  }, []);
+  const clearFlushTimer = () => {
+    if (flushTimerRef.current != null) {
+      window.clearTimeout(flushTimerRef.current);
+      flushTimerRef.current = null;
+    }
+  };
 
-  const pushBatch = useCallback((batch: LogEvent[]) => {
+  const flushPendingEvents = useCallback(() => {
+    if (pendingEventsRef.current.length === 0) return;
+    const batch = pendingEventsRef.current;
+    pendingEventsRef.current = [];
     setItems((prev) => capEvents([...prev, ...batch]));
   }, []);
+
+  const queueEvents = useCallback(
+    (incoming: LogEvent[]) => {
+      if (incoming.length === 0) return;
+
+      pendingEventsRef.current.push(...incoming);
+
+      if (flushTimerRef.current != null) return;
+
+      flushTimerRef.current = window.setTimeout(() => {
+        flushTimerRef.current = null;
+        flushPendingEvents();
+      }, STREAM_FLUSH_INTERVAL_MS);
+    },
+    [flushPendingEvents],
+  );
+
+  const pushOne = useCallback((event: LogEvent) => {
+    queueEvents([event]);
+  }, [queueEvents]);
+
+  const pushBatch = useCallback((batch: LogEvent[]) => {
+    queueEvents(batch);
+  }, [queueEvents]);
 
   const loadInitial = useCallback(async () => {
     if (!runId) return;
@@ -166,6 +199,8 @@ export function useLogsStream(runId: string, initialLimit = 200) {
 
     allowReconnectRef.current = false;
     clearReconnect();
+    clearFlushTimer();
+    pendingEventsRef.current = [];
     wsRef.current?.close();
     wsRef.current = null;
 
@@ -194,6 +229,8 @@ export function useLogsStream(runId: string, initialLimit = 200) {
       cancelled = true;
       allowReconnectRef.current = false;
       clearReconnect();
+      clearFlushTimer();
+      pendingEventsRef.current = [];
       wsRef.current?.close();
       wsRef.current = null;
     };
