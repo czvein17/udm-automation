@@ -1,11 +1,11 @@
-import { ElementsTab } from "../components/ElementsTab";
-import { AutomationConfigTab } from "../components/AutomationConfigTab";
+import { ElementsTab } from "@features/UDMAutomations/components/ElementsTab";
+import { AutomationConfigTab } from "@features/UDMAutomations/components/AutomationConfigTab";
 import { useShallow } from "zustand/react/shallow";
 import {
   type AutomationTab,
   useAutomationSessionStore,
-} from "../store/automationUi.store";
-import { selectSessionTabSlice } from "../store/automationUi.selectors";
+} from "@features/UDMAutomations/store/automationUi.store";
+import { selectSessionTabSlice } from "@features/UDMAutomations/store/automationUi.selectors";
 
 const CONFIG_OPTIONS: readonly AutomationTab[] = [
   "Elements",

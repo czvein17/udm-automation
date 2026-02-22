@@ -1,5 +1,5 @@
-import type { HeaderInfo } from "../../utils/LogsTerminal.mapper";
-import { valueOrDash } from "./LogsTerminal.shared";
+import type { HeaderInfo } from "@features/UDMAutomations/utils/LogsTerminal.mapper";
+import { valueOrDash } from "@features/UDMAutomations/components/logs-terminal/LogsTerminal.shared";
 
 type LogsRunHeaderProps = {
   header: HeaderInfo;

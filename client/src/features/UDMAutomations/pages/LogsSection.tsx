@@ -1,5 +1,5 @@
-import { LogsTerminal } from "../components/LogsTerminal";
-import { useAutomationSessionStore } from "../store/automationUi.store";
+import { LogsTerminal } from "@features/UDMAutomations/components/LogsTerminal";
+import { useAutomationSessionStore } from "@features/UDMAutomations/store/automationUi.store";
 
 export const LogsSection = () => {
   const currentRunId = useAutomationSessionStore((state) => state.currentRunId);

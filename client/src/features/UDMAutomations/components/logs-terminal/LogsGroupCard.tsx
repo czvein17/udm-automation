@@ -1,6 +1,9 @@
 import { ChevronRight } from "lucide-react";
-import type { TaskGroup } from "../../utils/LogsTerminal.mapper";
-import { getGroupBadge, valueOrDash } from "./LogsTerminal.shared";
+import type { TaskGroup } from "@features/UDMAutomations/utils/LogsTerminal.mapper";
+import {
+  getGroupBadge,
+  valueOrDash,
+} from "@features/UDMAutomations/components/logs-terminal/LogsTerminal.shared";
 
 type LogsGroupCardProps = {
   group: TaskGroup;

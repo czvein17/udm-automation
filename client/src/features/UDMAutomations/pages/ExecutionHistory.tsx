@@ -9,7 +9,7 @@ import {
   X,
 } from "lucide-react";
 
-import { LogsTerminal } from "../components/LogsTerminal";
+import { LogsTerminal } from "@features/UDMAutomations/components/LogsTerminal";
 import {
   fetchRunEvents,
   fetchRunHistory,
@@ -17,8 +17,8 @@ import {
   deleteRunEvents,
   type RunEventsPage,
   type RunHistorySummary,
-} from "../services/history.services";
-import { useAutomationSessionStore } from "../store/automationUi.store";
+} from "@features/UDMAutomations/services/history.services";
+import { useAutomationSessionStore } from "@features/UDMAutomations/store/automationUi.store";
 
 type EventsByRun = Record<string, RunEventsPage | undefined>;
 

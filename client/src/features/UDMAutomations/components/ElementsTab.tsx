@@ -2,38 +2,41 @@ import { useMemo, useState, useRef, useEffect } from "react";
 import { getCoreRowModel, useReactTable } from "@tanstack/react-table";
 
 import { elementRowsSchema } from "shared/dist/schema/elements.schema";
-import { ElementsTable } from "./ElementsTable";
+import { ElementsTable } from "@features/UDMAutomations/components/ElementsTable";
 
-import type { ElementRow } from "../types/elements.types";
-import { elementColumns } from "./elements.columns";
-import { initialRows, makeEmptyRow } from "../constants/elements.data";
+import type { ElementRow } from "@features/UDMAutomations/types/elements.types";
+import { elementColumns } from "@features/UDMAutomations/components/elements.columns";
+import {
+  initialRows,
+  makeEmptyRow,
+} from "@features/UDMAutomations/constants/elements.data";
 import {
   type RowFieldErrors,
   zodErrorToRowFieldErrors,
-} from "../utils/elements.error";
+} from "@features/UDMAutomations/utils/elements.error";
 
 import {
   useElementsTableMeta,
   type ElementsTableMeta as HookMeta,
-} from "../hooks/useElementsTableMeta";
-import { useElementServices } from "../hooks/useElementsServices";
+} from "@features/UDMAutomations/hooks/useElementsTableMeta";
+import { useElementServices } from "@features/UDMAutomations/hooks/useElementsServices";
 import { ClipboardPaste, Plus, Table2 } from "lucide-react";
 import {
   useAutomationSessionStore,
   useElementsDraftStore,
-} from "../store/automationUi.store";
+} from "@features/UDMAutomations/store/automationUi.store";
 import { useShallow } from "zustand/react/shallow";
 import {
   selectElementsDraftSlice,
   selectSetCurrentRunId,
-} from "../store/automationUi.selectors";
+} from "@features/UDMAutomations/store/automationUi.selectors";
 
 type ElementsTableMeta = HookMeta;
 
 // Known header aliases to map common Excel column names to ElementRow keys.
 const HEADER_ALIASES: Record<
   string,
-  keyof import("../types/elements.types").ElementRow | null
+  keyof import("@features/UDMAutomations/types/elements.types").ElementRow | null
 > = {
   // main fields
   fieldname: "fieldName",

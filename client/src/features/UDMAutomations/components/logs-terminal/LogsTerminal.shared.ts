@@ -1,4 +1,4 @@
-import type { TaskGroup } from "../../utils/LogsTerminal.mapper";
+import type { TaskGroup } from "@features/UDMAutomations/utils/LogsTerminal.mapper";
 
 export type LogsConnectionStatus =
   | "idle"

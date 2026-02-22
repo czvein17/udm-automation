@@ -1,15 +1,15 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useLogsStream } from "../hooks/useLogsStream";
+import { useLogsStream } from "@features/UDMAutomations/hooks/useLogsStream";
 import {
   buildLogsDisplayModel,
   type LogsDisplayModel,
-} from "../utils/LogsTerminal.mapper";
+} from "@features/UDMAutomations/utils/LogsTerminal.mapper";
 import {
   LogsGroupCard,
   LogsIssuesBanner,
   LogsRunHeader,
   LogsTopBar,
-} from "./logs-terminal";
+} from "@features/UDMAutomations/components/logs-terminal";
 
 type LogsTerminalProps = {
   runId: string;

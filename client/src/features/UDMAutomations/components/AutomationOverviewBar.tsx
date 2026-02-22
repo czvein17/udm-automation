@@ -5,13 +5,13 @@ import { useShallow } from "zustand/react/shallow";
 import {
   useAutomationSessionStore,
   useElementsDraftStore,
-} from "../store/automationUi.store";
+} from "@features/UDMAutomations/store/automationUi.store";
 import {
   selectElementsDraftSlice,
   selectSessionRunIdSlice,
   selectSessionTabSlice,
-} from "../store/automationUi.selectors";
-import { StatusChip } from "./StatusChip";
+} from "@features/UDMAutomations/store/automationUi.selectors";
+import { StatusChip } from "@features/UDMAutomations/components/StatusChip";
 
 export function AutomationOverviewBar() {
   const { activeTab } = useAutomationSessionStore(useShallow(selectSessionTabSlice));
