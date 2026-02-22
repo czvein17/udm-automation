@@ -23,6 +23,7 @@
     "test": "turbo test",
     "perf:reporter": "bun run scripts/perf/reporter-bench.ts",
     "perf:capture": "bun run scripts/perf/reporter-bench.ts --out=artifacts/perf/reporter-bench.ndjson",
+    "perf:summary": "bun run scripts/perf/summarize-bench.ts --source=artifacts/perf/reporter-bench.ndjson",
     "postinstall": "turbo build --filter=shared --filter=server"
   },
   "keywords": [

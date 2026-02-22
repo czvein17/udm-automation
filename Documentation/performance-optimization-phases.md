@@ -87,6 +87,25 @@ Results storage:
 - `artifacts/perf/reporter-bench.ndjson`
 - One JSON object per run (append-only).
 
+## Benchmark Snapshot (Current)
+
+Source: `artifacts/perf/reporter-bench.ndjson`
+
+| Label | Samples | History avg (ms) | History p95 (ms) | Ingest avg (ms) | Ingest p95 (ms) |
+|---|---:|---:|---:|---:|---:|
+| phase-0-after | 1 | 1.209 | 12.815 | 2.208 | 3.169 |
+| phase-3-after | 5 | 1.089 | 12.598 | 1.870 | 2.820 |
+
+Delta (`phase-3-after` vs `phase-0-after`):
+- History avg: `-9.965%`
+- History p95: `-1.697%`
+- Ingest avg: `-15.324%`
+- Ingest p95: `-11.001%`
+
+Notes:
+- `phase-0-after` currently has one sample; collect more baseline samples for stronger statistical confidence.
+- Run `bun run perf:capture --label=<label>` multiple times and recompute via `bun run perf:summary`.
+
 ## Metrics Template
 
 Use this template in PR descriptions:
