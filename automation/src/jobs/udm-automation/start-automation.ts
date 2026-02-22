@@ -17,6 +17,7 @@ import {
   toTitleCase,
   toUserErrorMessage,
 } from "../../util/logging.util";
+import { editApplicabilities } from "./edit-applicabilities";
 
 export const startAutomation = async (
   config: Config,
@@ -30,7 +31,7 @@ export const startAutomation = async (
     throw new Error("No tasks found for runId: " + runId);
   }
 
-  const BATCH_SIZE = 2;
+  const BATCH_SIZE = 3;
   for (let i = 0; i < taskList.length; i += BATCH_SIZE) {
     const chunk = taskList.slice(i, i + BATCH_SIZE);
 
@@ -175,7 +176,7 @@ export const startAutomation = async (
             case "udm:re-approve":
               await row.step("Automation action", { action: "Re-Approve" });
               console.log("RE-APPROVING ELEMENTS");
-
+              page.bringToFront();
               await reApprove(page, row);
 
               break;
@@ -185,6 +186,13 @@ export const startAutomation = async (
                 action: "Edit Attributes",
               });
               await editAttributes(page, task, row);
+              break;
+
+            case "udm:edit_applicabilities":
+              await row.step("Automation action", {
+                action: "Edit Applicabilities",
+              });
+              await editApplicabilities(page, task, row);
               break;
 
             default:

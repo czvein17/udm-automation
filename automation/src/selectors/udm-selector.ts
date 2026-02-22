@@ -16,6 +16,8 @@ export default {
   dialogSel:
     "cdk-overlay-container .mat-mdc-dialog-container, cdk-overlay-container mat-dialog-container, .mat-mdc-dialog-container, mat-dialog-container",
 
+  applicabilitiesTab: "#element-properties-aplicability",
+
   btnUnlock: "#btn-unlock",
   btnSave: "#btn-save-element-properties",
   btnApprove: "#btn-approve",
