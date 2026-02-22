@@ -65,6 +65,12 @@ export const config = sqliteTable("config", {
 
   automationType: text("automationType").notNull().default("udm:open_elem"),
   translation: text("translation").notNull().default("English"),
+  autoCloseBrowser: integer("autoCloseBrowser", { mode: "boolean" })
+    .notNull()
+    .default(false),
+  autoCloseTaskPage: integer("autoCloseTaskPage", { mode: "boolean" })
+    .notNull()
+    .default(false),
 });
 
 export const automationLogs = sqliteTable(
@@ -127,6 +133,8 @@ export const configSchema = z.object({
     .transform((val) => val as string),
 
   translation: z.string().default("English"),
+  autoCloseBrowser: z.boolean().default(false),
+  autoCloseTaskPage: z.boolean().default(false),
 });
 
 export type Config = z.infer<typeof configSchema>;

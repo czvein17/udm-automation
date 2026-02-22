@@ -91,6 +91,31 @@ void (async () => {
       CREATE INDEX IF NOT EXISTS idx_reporter_run_summaries_last_ts
       ON reporter_run_summaries(lastTs);
     `);
+
+    await (client as any).execute(`
+      CREATE TABLE IF NOT EXISTS config (
+        id TEXT PRIMARY KEY,
+        configFor TEXT NOT NULL UNIQUE,
+        baseUrl TEXT NULL,
+        surveyline TEXT NULL,
+        automationType TEXT NOT NULL DEFAULT 'udm:open_elem',
+        translation TEXT NOT NULL DEFAULT 'English',
+        autoCloseBrowser INTEGER NOT NULL DEFAULT 0,
+        autoCloseTaskPage INTEGER NOT NULL DEFAULT 0
+      );
+    `);
+
+    await (client as any)
+      .execute(`
+        ALTER TABLE config ADD COLUMN autoCloseBrowser INTEGER NOT NULL DEFAULT 0;
+      `)
+      .catch(() => undefined);
+
+    await (client as any)
+      .execute(`
+        ALTER TABLE config ADD COLUMN autoCloseTaskPage INTEGER NOT NULL DEFAULT 0;
+      `)
+      .catch(() => undefined);
   } catch (e) {
     console.warn("Could not ensure tasks table exists:", e);
   }

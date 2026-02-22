@@ -26,6 +26,8 @@ export const createConfigService = async (
     automationType:
       payload.automationType as unknown as Config["automationType"],
     translation: payload.translation ?? undefined,
+    autoCloseBrowser: payload.autoCloseBrowser ?? false,
+    autoCloseTaskPage: payload.autoCloseTaskPage ?? false,
   };
 
   return await configRepo.createConfig(newData);
@@ -62,6 +64,10 @@ export const updateConfigService = async (
     automationType: (payload.automationType ??
       existingConfig.automationType) as Config["automationType"],
     translation: payload.translation ?? existingConfig.translation ?? undefined,
+    autoCloseBrowser:
+      payload.autoCloseBrowser ?? existingConfig.autoCloseBrowser ?? false,
+    autoCloseTaskPage:
+      payload.autoCloseTaskPage ?? existingConfig.autoCloseTaskPage ?? false,
   };
 
   return await configRepo.updateConfig(updatedData);

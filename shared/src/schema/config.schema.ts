@@ -17,6 +17,8 @@ export const configSchema = z.object({
     ])
     .default("udm:open_elem"),
   translation: z.string().default("English"),
+  autoCloseBrowser: z.boolean().default(false),
+  autoCloseTaskPage: z.boolean().default(false),
 });
 
 export const createConfigSchema = configSchema.omit({ id: true });
