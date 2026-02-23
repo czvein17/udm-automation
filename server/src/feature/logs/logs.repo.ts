@@ -388,6 +388,10 @@ export async function deleteLogsForRun(runId: string) {
   runSeqCache.delete(runId);
 }
 
+export function clearRunSeqCache(runId: string) {
+  runSeqCache.delete(runId);
+}
+
 export async function deleteAllLogs() {
   await db.delete(automationLogs);
   await db.delete(reporterRunSummaries);
