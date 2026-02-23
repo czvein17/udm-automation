@@ -36,11 +36,11 @@ export default ({ mode }: { mode: string }) => {
     server: {
       proxy: {
         "/api": {
-          target: "http://localhost:3000",
+          target: "http://192.168.254.102:3000",
           changeOrigin: true,
         },
         "/ws": {
-          target: "ws://localhost:3000",
+          target: "ws://192.168.254.102/:3000",
           ws: true,
           changeOrigin: true,
         },

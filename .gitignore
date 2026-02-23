@@ -48,3 +48,5 @@ bun.lockb
 
 # local auth storage
 auth.storage.json
+
+data/.xlsx

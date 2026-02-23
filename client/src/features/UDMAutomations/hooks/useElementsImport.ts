@@ -49,6 +49,38 @@ export function useElementsImport({
   setErrors,
   fileInputRef,
 }: UseElementsImportParams) {
+  function importFromText(text: string) {
+    if (!text) return;
+
+    const rows = parseClipboardRows(text);
+    if (rows.length === 0) return;
+
+    const editableFields = getEditableFields(data);
+    const { firstEmptyRowIndex, startId } = getInsertPosition(data);
+    const firstRow = rows[0] ?? [];
+
+    if (looksLikeHeader(firstRow)) {
+      const headers = firstRow.map((cell) => String(cell));
+      const headerMap = buildHeaderMap(
+        headers,
+        editableFields,
+        CLIPBOARD_HEADER_MATCH,
+      );
+      const mappedRows = mapDelimitedRowsWithHeaders(
+        rows.slice(1),
+        headers,
+        headerMap,
+        startId,
+      );
+
+      applyMappedRows(mappedRows, firstEmptyRowIndex, setErrors, setData);
+      return;
+    }
+
+    const mappedRows = mapDelimitedRowsByOrder(rows, startId);
+    applyMappedRows(mappedRows, firstEmptyRowIndex, setErrors, setData);
+  }
+
   async function handleFileInputChange(e: ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -84,38 +116,25 @@ export function useElementsImport({
 
   async function handlePasteClipboard() {
     try {
-      const text = await navigator.clipboard.readText();
-      if (!text) return;
-
-      const rows = parseClipboardRows(text);
-      if (rows.length === 0) return;
-
-      const editableFields = getEditableFields(data);
-      const { firstEmptyRowIndex, startId } = getInsertPosition(data);
-      const firstRow = rows[0] ?? [];
-
-      if (looksLikeHeader(firstRow)) {
-        const headers = firstRow.map((cell) => String(cell));
-        const headerMap = buildHeaderMap(
-          headers,
-          editableFields,
-          CLIPBOARD_HEADER_MATCH,
+      if (!window.isSecureContext || !navigator.clipboard?.readText) {
+        const fallbackText = window.prompt(
+          "Clipboard access is blocked on non-secure origins. Paste your rows here:",
         );
-        const mappedRows = mapDelimitedRowsWithHeaders(
-          rows.slice(1),
-          headers,
-          headerMap,
-          startId,
-        );
-
-        applyMappedRows(mappedRows, firstEmptyRowIndex, setErrors, setData);
+        if (!fallbackText) return;
+        importFromText(fallbackText);
         return;
       }
 
-      const mappedRows = mapDelimitedRowsByOrder(rows, startId);
-      applyMappedRows(mappedRows, firstEmptyRowIndex, setErrors, setData);
+      const text = await navigator.clipboard.readText();
+      importFromText(text);
     } catch (error) {
       console.error("Failed to paste data", error);
+
+      const fallbackText = window.prompt(
+        "Clipboard permission was denied. Paste your rows here:",
+      );
+      if (!fallbackText) return;
+      importFromText(fallbackText);
     }
   }
 

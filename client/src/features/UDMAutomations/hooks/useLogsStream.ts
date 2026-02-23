@@ -101,13 +101,19 @@ export function useLogsStream(runId: string, initialLimit = 200) {
     [flushPendingEvents],
   );
 
-  const pushOne = useCallback((event: LogEvent) => {
-    queueEvents([event]);
-  }, [queueEvents]);
+  const pushOne = useCallback(
+    (event: LogEvent) => {
+      queueEvents([event]);
+    },
+    [queueEvents],
+  );
 
-  const pushBatch = useCallback((batch: LogEvent[]) => {
-    queueEvents(batch);
-  }, [queueEvents]);
+  const pushBatch = useCallback(
+    (batch: LogEvent[]) => {
+      queueEvents(batch);
+    },
+    [queueEvents],
+  );
 
   const loadInitial = useCallback(async () => {
     if (!runId) return;
@@ -185,8 +191,11 @@ export function useLogsStream(runId: string, initialLimit = 200) {
     const httpBase = getServerHttpBaseUrl({
       envUrl: import.meta.env.VITE_SERVER_URL as string | undefined,
       protocol: window.location.protocol,
-      hostname: window.location.hostname,
+      host: window.location.host,
     });
+
+    console.log(httpBase);
+
     const ws = new WebSocket(wsUrlForRun(runId, httpBase));
     wsRef.current = ws;
 

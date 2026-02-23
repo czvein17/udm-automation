@@ -1,4 +1,4 @@
-import { elementRowsSchema } from "shared/dist/schema/elements.schema";
+import { elementRowsSchema } from "shared";
 
 import { makeEmptyRow } from "@features/UDMAutomations/constants/elements.data";
 import type { ElementRow } from "@features/UDMAutomations/types/elements.types";

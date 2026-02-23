@@ -31,7 +31,7 @@ export const startAutomation = async (
     throw new Error("No tasks found for runId: " + runId);
   }
 
-  const BATCH_SIZE = 3;
+  const BATCH_SIZE = 5;
   for (let i = 0; i < taskList.length; i += BATCH_SIZE) {
     const chunk = taskList.slice(i, i + BATCH_SIZE);
 

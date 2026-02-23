@@ -16,12 +16,31 @@ export function capEvents(items: LogEvent[]) {
 export function getServerHttpBaseUrl(params: {
   envUrl?: string;
   protocol: string;
-  hostname: string;
+  host: string;
 }) {
+  const protocol = params.protocol === "https:" ? "https:" : "http:";
   const envUrl = params.envUrl?.trim();
-  if (envUrl) return envUrl;
-  const protocol = params.protocol === "https:" ? "https" : "http";
-  return `${protocol}://${params.hostname}:3000`;
+
+  if (envUrl) {
+    try {
+      const normalized = envUrl.includes("://")
+        ? envUrl
+        : `${protocol}//${envUrl}`;
+      const url = new URL(normalized);
+      return `${url.protocol}//${url.host}`;
+    } catch {
+      // fall through to local host inference
+    }
+  }
+
+  const normalizedHost = params.host
+    .trim()
+    .replace(/^[a-z]+:\/\//i, "")
+    .split("/")[0]!
+    .split("@").at(-1)!
+    .split(":")[0]!;
+
+  return `${protocol}//${normalizedHost}:3000`;
 }
 
 export function wsUrlForRun(runId: string, httpBaseUrl: string) {
