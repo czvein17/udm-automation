@@ -244,7 +244,8 @@ async function runTask(args: {
   rowIndex: number;
   runWithLanguageStepLock: RunWithLanguageStepLock;
 }) {
-  const { context, config, runId, task, rowIndex, runWithLanguageStepLock } = args;
+  const { context, config, runId, task, rowIndex, runWithLanguageStepLock } =
+    args;
   const page = await context.newPage();
 
   const url = buildRecordUrl(
@@ -310,8 +311,6 @@ async function runTask(args: {
       taskId: task.id,
       error: toErrorMessage(error),
     });
-  } finally {
-    await page.close().catch(() => undefined);
   }
 }
 
