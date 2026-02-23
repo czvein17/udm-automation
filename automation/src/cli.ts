@@ -12,7 +12,6 @@ dotenv.config({ path: path.resolve(repoRoot, ".env") });
 process.title = "udm-automation-worker";
 
 import { runUdmAutomation } from "./jobs/udm-automation";
-import { makeLogger } from "./shared/logger";
 
 const jobRegistry = {
   "udm-automation": (runId: string) => runUdmAutomation(runId),
@@ -42,11 +41,6 @@ async function main() {
 }
 
 main().catch((err) => {
-  const logger = makeLogger({
-    runId: runId || "unknown",
-    jobId: jobId || "unknown",
-    runnerId: `pid-${process.pid}`,
-  });
-  void logger.error("task_end", { result: "failed", error: err?.message });
+  console.error("task_end", { result: "failed", error: err?.message });
   console.error(err);
 });

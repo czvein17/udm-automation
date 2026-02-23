@@ -1,6 +1,6 @@
 ---
 name: coder-buddy
-description: Playbooks and rules for safe changes across BHVR monorepo (server/client/shared/automation) while preserving contracts and logs.
+description: Playbooks and rules for safe changes across BHVR monorepo (server/client/shared/automation) while preserving contracts.
 compatibility: opencode
 ---
 
@@ -10,7 +10,7 @@ UDM Automation Engineering Skill profile for AI agents.
 
 ## Goal
 
-Deliver safe, scalable changes across `automation`, `server`, `client`, and `shared` while preserving contracts and log/reporting behavior.
+Deliver safe, scalable changes across `automation`, `server`, `client`, and `shared` while preserving contracts and runtime safety.
 
 ## Load order
 
@@ -29,8 +29,8 @@ Deliver safe, scalable changes across `automation`, `server`, `client`, and `sha
 ## Skill rules
 
 - Contracts-first: update `shared` schema before cross-layer behavior.
-- Compatibility-first: preserve REST/WS payload compatibility for logs.
-- Observability-first: emit structured reporter/log events for critical actions.
+- Compatibility-first: preserve active REST payload compatibility.
+- Observability-first: keep run state and failure context explicit.
 - Safety-first: avoid destructive defaults and never hardcode secrets.
 - Scalability-first: prefer additive schema evolution, bounded memory, and testable pure utilities.
 
@@ -58,16 +58,11 @@ Deliver safe, scalable changes across `automation`, `server`, `client`, and `sha
 - Update shared Zod schema before modifying cross-layer payloads.
 - Keep schema evolution additive and backward-compatible.
 
-### Logging & Observability
+### Runtime Observability
 
-- Preserve existing log lifecycle:
-  - `run_start`
-  - `row_start`
-  - `row_step`
-  - `row_end`
-- Always include `runId` and `jobId` in log context.
-- Avoid console-only debugging in production paths.
-- Structured logs > free-text logs.
+- Always include `runId` and `jobId` in failure context.
+- Avoid swallowing errors in production paths.
+- Prefer structured status payloads at API boundaries.
 
 ### Automation Engineering
 
@@ -80,8 +75,7 @@ Deliver safe, scalable changes across `automation`, `server`, `client`, and `sha
 
 ### Performance & Scalability
 
-- Avoid unbounded arrays or log accumulation in memory.
-- Use streaming (WS) for large log flows.
+- Avoid unbounded arrays or payload accumulation in memory.
 - Prefer pure functions for mappers/parsers.
 - Avoid heavy synchronous loops inside request handlers.
 
@@ -95,7 +89,6 @@ Deliver safe, scalable changes across `automation`, `server`, `client`, and `sha
 ### Refactor Guidelines
 
 - Preserve public API surface.
-- Preserve log payload structure.
 - Maintain compatibility with existing client consumers.
 - Keep changes reversible when possible.
 
@@ -107,6 +100,6 @@ Before finishing a task:
 - [ ] Server validation updated
 - [ ] Automation caller updated
 - [ ] Client parser updated (if applicable)
-- [ ] Logs remain backward compatible
+- [ ] Runtime behavior remains coherent
 - [ ] Type-check passes
 - [ ] No duplicated logic introduced

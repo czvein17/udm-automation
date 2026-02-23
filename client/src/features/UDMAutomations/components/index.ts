@@ -8,5 +8,4 @@ export {
   ElementsToolbarButton,
   TableHeader,
 } from "./elements";
-export { LogsTerminal } from "./logs";
 export { AutomationOverviewBar, StatusChip } from "./overview";

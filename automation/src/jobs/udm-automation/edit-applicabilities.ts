@@ -1,12 +1,10 @@
 import type { Task } from "@server/db/schema";
 import type { Page } from "playwright-core";
-import type { RowReporter } from "../../shared/logger.util";
 import udmSelector from "../../selectors/udm-selector";
 
 export const editApplicabilities = async (
   tab: Page,
   task: Task,
-  row: RowReporter,
 ) => {
   const waitTimeout = 30000;
 
@@ -16,10 +14,7 @@ export const editApplicabilities = async (
   // get panel id from aria-controls if available, click the tab, then wait for panel
   const panelId = (await tabBtn.getAttribute("aria-controls")) || null;
   await tabBtn.click();
-
-  row.step("Click: Applicabilities tab", {
-    action: "click",
-  });
+  console.log("Click: Applicabilities tab", task.id);
 
   if (panelId) {
     await tab.waitForSelector(`#${panelId}`, { timeout: waitTimeout });

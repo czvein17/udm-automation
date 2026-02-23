@@ -119,16 +119,11 @@ If a workspace has no `test` script yet, add one in that package first.
 - Log meaningful context (`runId`, `jobId`, row/task info) on failures.
 - Preserve existing `ApiResponse<T>` conventions where used.
 
-### Logging / Reporter Contracts
+### Runtime Observability
 
-- Keep log endpoints stable:
-  - `POST /api/v1/reporter/runs/:runId/events`
-  - `GET /api/v1/reporter/runs/:runId/events`
-  - `/ws/reporter/:runId`
-- Preserve reporter lifecycle:
-  - `run_start -> row_start -> row_step* -> row_end`
-- Ensure row grouping remains stable (prefer `taskId`).
-- Keep parser logic tolerant of mixed payload quality.
+- Keep run status transitions explicit and easy to trace.
+- Log meaningful context (`runId`, `jobId`, row/task info) on failures.
+- Prefer structured payloads at API boundaries.
 
 ### Client / Server Boundaries
 

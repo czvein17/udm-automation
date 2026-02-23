@@ -15,9 +15,5 @@ Rollback plan:
 ## Minimum checks
 
 - Confirm whether `shared/src/schema` contracts change.
-- Confirm whether logs/reporter lifecycle changes (`run_start -> row_start -> row_step* -> row_end`).
-- Confirm endpoint compatibility for:
-  - `POST /api/v1/reporter/runs/:runId/events`
-  - `GET /api/v1/reporter/runs/:runId/events`
-  - `/ws/reporter/:runId`
+- Confirm endpoint compatibility for active API routes.
 - Confirm validation boundaries still use Zod at input edges.

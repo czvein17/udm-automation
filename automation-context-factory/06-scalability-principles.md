@@ -9,8 +9,8 @@
 ## Runtime scalability
 
 - Design automation runs to be resumable and diagnosable.
-- Keep logs structured and compact; avoid giant payloads in `meta/details`.
-- Maintain bounded in-memory buffers on stream consumers.
+- Keep runtime payloads structured and compact.
+- Maintain bounded in-memory buffers on consumers.
 
 ## Codebase scalability
 
@@ -26,6 +26,6 @@
 
 ## Performance guardrails
 
-- Avoid O(n^2) transforms in hot stream paths.
-- Batch where practical, but preserve ordering guarantees for row events.
-- Cap memory usage for live logs and keep UI responsive under high volume.
+- Avoid O(n^2) transforms in hot paths.
+- Batch where practical, while preserving ordering guarantees.
+- Cap memory usage and keep UI responsive under high volume.
