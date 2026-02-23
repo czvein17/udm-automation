@@ -26,5 +26,6 @@ export const configSchema = z.object({
 export const createConfigSchema = configSchema.omit({ id: true });
 export const updateConfigSchema = createConfigSchema.partial();
 
+export type Config = z.infer<typeof configSchema>;
 export type CreateConfig = z.infer<typeof createConfigSchema>;
 export type UpdateConfig = z.infer<typeof updateConfigSchema>;

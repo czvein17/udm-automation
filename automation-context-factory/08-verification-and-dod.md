@@ -10,7 +10,7 @@ From repo root:
 
 If automation changed:
 
-- `cd automation && npm run typecheck`
+- `bun run --cwd automation typecheck`
 
 If run-state flow changed:
 

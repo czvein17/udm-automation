@@ -1,4 +1,10 @@
-import { sqliteTable, text, index } from "drizzle-orm/sqlite-core";
+import {
+  index,
+  integer,
+  sqliteTable,
+  text,
+  uniqueIndex,
+} from "drizzle-orm/sqlite-core";
 import { z, string, uuid } from "zod";
 
 export const tasks = sqliteTable("tasks", {
@@ -31,6 +37,60 @@ export const taskSchema = z.object({
 });
 
 export type Task = z.infer<typeof taskSchema>;
+
+export const automationRuns = sqliteTable("automation_runs", {
+  id: text("id").primaryKey(),
+  engine: text("engine").notNull().default("udm"),
+  status: text("status").notNull().default("RUNNING"),
+  createdAt: text("createdAt").notNull(),
+  updatedAt: text("updatedAt").notNull(),
+});
+
+export const automationTasks = sqliteTable(
+  "automation_tasks",
+  {
+    id: text("id").primaryKey(),
+    runId: text("runId").notNull(),
+    fieldName: text("fieldName"),
+    elementId: text("elementId"),
+    tableName: text("tableName"),
+    elementName: text("elementName"),
+    displayName: text("displayName"),
+    url: text("url"),
+  },
+  (table) => ({
+    runIdIdx: index("idx_automation_tasks_run_id").on(table.runId),
+  }),
+);
+
+export const automationEvents = sqliteTable(
+  "automation_events",
+  {
+    id: text("id").primaryKey(),
+    runId: text("runId").notNull(),
+    taskId: text("taskId").notNull(),
+    seq: integer("seq").notNull(),
+    type: text("type").notNull(),
+    details: text("details").notNull(),
+    payloadJson: text("payloadJson"),
+    createdAt: text("createdAt").notNull(),
+  },
+  (table) => ({
+    runSeqUniqueIdx: uniqueIndex("idx_automation_events_run_seq_unique").on(
+      table.runId,
+      table.seq,
+    ),
+    runSeqIdx: index("idx_automation_events_run_seq").on(
+      table.runId,
+      table.seq,
+    ),
+    runTaskSeqIdx: index("idx_automation_events_run_task_seq").on(
+      table.runId,
+      table.taskId,
+      table.seq,
+    ),
+  }),
+);
 
 export const config = sqliteTable("config", {
   id: text("id").primaryKey().unique(),

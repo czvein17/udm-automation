@@ -99,7 +99,7 @@ bun run dev:client
 bun run build
 bun run type-check
 bun run test
-cd automation && npm run typecheck
+bun run --cwd automation typecheck
 ```
 
 ## Environment notes
@@ -107,11 +107,18 @@ cd automation && npm run typecheck
 - Keep secrets in environment files/variables only
 - Do not hardcode credentials or tokens in code
 
+## Documentation
+
+- Docs index: `documentation/README.md`
+- Developer onboarding: `documentation/onboarding.md`
+- API reference: `documentation/api-endpoints.md`
+- Automation terminal architecture: `documentation/automation-terminal-how-it-works.md`
+
 ## Handover notes for new maintainers
 
 1. Read `AGENTS.md`
 2. Read `automation-context-factory/AGENTS.md`
-3. Read docs in `documentation/`
+3. Read `documentation/onboarding.md` then the remaining docs in `documentation/`
 4. Run build/type-check commands
 5. Start a sample run and verify workflow behavior
 

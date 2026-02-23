@@ -9,7 +9,10 @@ export async function ensureLoggedIn(opts: {
   context: BrowserContext;
   baseUrl: string;
   statePath: string;
-  logger: { info: (...a: any[]) => void; error: (...a: any[]) => void };
+  logger: {
+    info: (event: string, context?: Record<string, unknown>) => void;
+    error: (event: string, context?: Record<string, unknown>) => void;
+  };
 }) {
   const { page, context, baseUrl, statePath, logger } = opts;
 
@@ -24,7 +27,7 @@ export async function ensureLoggedIn(opts: {
   const shortTimeout = 30000;
   try {
     await strong.waitFor({ state: "visible", timeout: shortTimeout });
-    console.log("🔓 Inside app (authenticated).");
+    logger.info("auth.inside_app", { authenticated: true });
     await context.storageState({ path: statePath });
     return;
   } catch {}
@@ -54,10 +57,10 @@ export async function ensureLoggedIn(opts: {
     SSO_HOSTS.has(hostNow);
 
   if (isSSOPage) {
-    console.log(
-      "🔐 SSO detected. Please complete login/MFA in the opened browser.",
-    );
-    console.log("SSO URL:", urlNow);
+    logger.info("auth.sso_detected", {
+      prompt: "Complete login or MFA in the opened browser",
+      url: urlNow,
+    });
 
     // await page.waitForSelector("#signInName", { timeout: 5000 });
     // await page.fill("#signInName", process.env.UDM_USERNAME ?? "CZVEI8167");
@@ -79,16 +82,14 @@ export async function ensureLoggedIn(opts: {
       { timeout: 0 },
     );
 
-    console.log(
-      "🔁 Returned to app host. Navigating to baseUrl to ensure correct start page...",
-    );
+    logger.info("auth.returned_to_app_host", { appHost: APP_HOST });
     await page.goto(baseUrl, { waitUntil: "domcontentloaded" });
 
     // ✅ Now wait for inside marker (normal timeout)
     const waitTimeout = 30000;
     await strong.waitFor({ state: "visible", timeout: waitTimeout });
 
-    console.log("✅ Login completed – inside app.");
+    logger.info("auth.login_completed", { authenticated: true });
     await context.storageState({ path: statePath });
     return;
   }

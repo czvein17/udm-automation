@@ -1,5 +1,6 @@
 import type { Page } from "playwright-core";
 import udmSelector from "../../selectors/udm-selector";
+import { automationLog } from "../../util/runtimeLogger";
 
 export const ensureUnlocked = async (tab: Page) => {
   const timeout = 30000;
@@ -9,13 +10,12 @@ export const ensureUnlocked = async (tab: Page) => {
   const unlockBtn = tab.locator(udmSelector.btnUnlock).first();
 
   if (!(await unlockBtn.count()) || !(await unlockBtn.isVisible())) {
-    console.log("🔓 Element already unlocked (no unlock control present).");
+    automationLog.info("udm.unlock.already_unlocked");
     return "already-unlocked";
   }
 
-  console.log("🔒 Element locked — attempting unlock...");
+  automationLog.info("udm.unlock.start");
   await unlockBtn.click();
-  await tab.waitForTimeout(500); // wait for potential dialog to appear
   await tab.waitForSelector(dialogSelector, { state: "visible", timeout });
 
   // Try to find and click an "Unlock" button inside any overlay using evaluation (robust to different containers)
@@ -50,9 +50,9 @@ export const ensureUnlocked = async (tab: Page) => {
     await tab
       .waitForSelector(dialogSelector, { state: "detached", timeout })
       .catch(() => {});
-    console.log(
-      "✅ Unlock confirmed (via overlay eval). Waiting for UI to update...",
-    );
+    automationLog.info("udm.unlock.confirmed", {
+      source: "overlay-eval",
+    });
 
     // After unlocking the UI should update: unlock control should disappear and save/approve should appear.
     try {
@@ -83,7 +83,7 @@ export const ensureUnlocked = async (tab: Page) => {
       // ignore
     }
 
-    console.log("UI update wait complete (unlock flow).");
+    automationLog.info("udm.unlock.ui_ready");
     return "unlocked";
   }
 };

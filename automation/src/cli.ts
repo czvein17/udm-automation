@@ -1,6 +1,7 @@
 import dotenv from "dotenv";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { automationLog } from "./util/runtimeLogger";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -27,20 +28,26 @@ const jobId = process.argv[2] as JobId;
 const runId = process.argv[3] as string;
 
 if (!jobId || !runId || !(jobId in jobRegistry)) {
-  console.error("Usage: bunx tsx src/cli.ts <jobId> <runId>");
-  console.error("Valid jobIds:", Object.keys(jobRegistry).join(", "));
+  automationLog.error("cli.invalid_args", {
+    usage: "bunx tsx src/cli.ts <jobId> <runId>",
+    validJobIds: Object.keys(jobRegistry).join(", "),
+  });
   process.exit(1);
 }
 
 async function main() {
-  console.log("CLI args:", process.argv.slice(2));
-  console.log("Selected jobId:", jobId);
-  console.log("Resolved handler:", jobRegistry[jobId]?.name ?? "<anonymous>");
+  automationLog.info("cli.start", {
+    args: process.argv.slice(2),
+    jobId,
+    handler: jobRegistry[jobId]?.name ?? "<anonymous>",
+  });
 
   await jobRegistry[jobId](runId);
 }
 
 main().catch((err) => {
-  console.error("task_end", { result: "failed", error: err?.message });
-  console.error(err);
+  automationLog.error("cli.failed", {
+    result: "failed",
+    error: err instanceof Error ? err.message : String(err),
+  });
 });

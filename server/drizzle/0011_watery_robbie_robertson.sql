@@ -1,1 +1,1 @@
-DROP TABLE `reporter_run_summaries`;
+DROP TABLE IF EXISTS `reporter_run_summaries`;

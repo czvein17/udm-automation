@@ -5,9 +5,11 @@ import { db } from "@server/db/client";
 import { tasks, type Task } from "@server/db/schema";
 import { runAutomationJob } from "@server/runners/automation.runner";
 import { createRun } from "@server/stores/run.store";
+import { ensureRun } from "@server/feature/automationTerminal/automationTerminal.repo";
+import { serverLog } from "@server/util/runtimeLogger";
 
 import * as automationRepo from "./automation.repositories";
-import type { CreateTask } from "shared/dist";
+import type { CreateTask } from "shared";
 
 export async function startAutomationRun(
   payload: CreateTask,
@@ -16,6 +18,7 @@ export async function startAutomationRun(
   const jobId = "udm-automation";
 
   createRun(runId, jobId);
+  await ensureRun(runId, "udm");
 
   const newTask: Task = {
     id: nanoid(),
@@ -40,6 +43,9 @@ export async function openAutomationMultiple(
   const runId = nanoid();
   const jobId = "udm-automation";
 
+  createRun(runId, jobId);
+  await ensureRun(runId, "udm");
+
   const newTasks = payloads.map((payload) => ({
     id: nanoid(),
     runId: runId,
@@ -63,7 +69,11 @@ export async function getTasksByRunId(runId: string): Promise<Task[]> {
 }
 
 export const createTask = async (payload: CreateTask): Promise<Task | null> => {
-  console.log(payload);
+  serverLog.info("automation.task.create_requested", {
+    fieldName: payload.fieldName,
+    elementId: payload.elementId,
+    tableName: payload.tableName,
+  });
 
   const runId = nanoid();
   const jobId = "udm-automation";
@@ -85,7 +95,7 @@ export const getTasks = async (): Promise<Task[]> => {
 };
 
 export const getTaskByRunId = async (runId: string): Promise<Task | null> => {
-  console.log("Getting Task ID: ", runId);
+  serverLog.info("automation.task.fetch_by_run", { runId });
 
   const task = await db
     .select()

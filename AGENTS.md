@@ -36,19 +36,19 @@ Run from repo root unless noted.
 - Server dev: `bun run dev:server`
 - Client build: `bun run build:client`
 - Server build: `bun run build:server`
-- Client lint directly: `bun --filter client run lint`
-- Shared build directly: `bun --filter shared run build`
-- Server build directly: `bun --filter server run build`
+- Client lint directly: `bun run --cwd client lint`
+- Shared build directly: `bun run --cwd shared build`
+- Server build directly: `bun run --cwd server build`
 
 ### Database (Server)
 
-- Generate migrations: `bun --filter server run db:generate`
-- Apply migrations: `bun --filter server run db:migrate`
+- Generate migrations: `bun run --cwd server db:generate`
+- Apply migrations: `bun run --cwd server db:migrate`
 
 ### Automation Workspace
 
-- Run automation CLI: `bun --filter automation run automate -- <jobId> <runId>`
-- Type-check automation: `bun --filter automation run typecheck`
+- Run automation CLI: `bun run --cwd automation automate -- <jobId> <runId>`
+- Type-check automation: `bun run --cwd automation typecheck`
 - Alternative from workspace: `npm run typecheck` in `automation/`
 
 ## Single Test Guidance (Important)
@@ -69,12 +69,12 @@ If a package adds tests, use one of these patterns:
 
 2) Run a single test file (framework-dependent):
 
-- Vitest/Jest style: `bun --filter <workspace> run test -- path/to/file.test.ts`
+- Vitest/Jest style: `bun run --cwd <workspace> test -- path/to/file.test.ts`
 - Bun test style: `bun test path/to/file.test.ts`
 
 3) Run a single test name (framework-dependent):
 
-- `bun --filter <workspace> run test -- -t "test name"`
+- `bun run --cwd <workspace> test -- -t "test name"`
 
 If a workspace has no `test` script yet, add one in that package first.
 

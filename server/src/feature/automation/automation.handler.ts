@@ -1,9 +1,11 @@
 import type { Context } from "hono";
 
-import { db } from "@server/db/client";
-import { tasks, type Task } from "@server/db/schema";
-import { taskSchema } from "@server/db/schema";
-import type { ApiResponse } from "shared/dist";
+import type { Task } from "@server/db/schema";
+import {
+  respondNotFound,
+  respondOk,
+  respondEmptyList,
+} from "@server/util/apiResponse.util";
 
 import { startAutomationRun } from "./automation.service";
 
@@ -16,13 +18,7 @@ export async function openAutomation(c: Context) {
     runId: string;
   } = await startAutomationRun(payload);
 
-  const data: ApiResponse<{ runId: string }> = {
-    message: "Automation run started successfully",
-    success: true,
-    data: result,
-  };
-
-  return c.json(data, { status: 200 });
+  return respondOk(c, result, "Automation run started successfully");
 }
 
 export async function openAutomationMultiple(c: Context) {
@@ -32,62 +28,41 @@ export async function openAutomationMultiple(c: Context) {
     runId: string;
   } = await automationService.openAutomationMultiple(payload);
 
-  const data: ApiResponse<{ runId: string }> = {
-    message: "Automation run started successfully",
-    success: true,
-    data: results,
-  };
-
-  return c.json(data, { status: 200 });
+  return respondOk(c, results, "Automation run started successfully");
 }
 
 export async function getTaskList(c: Context) {
-  const runId = c.req.param("runId");
+  const runId = c.req.param("runId").trim();
   const result: Task[] = await automationService.getTasksByRunId(runId);
 
-  const data: ApiResponse<Task[]> = {
-    message: "Tasks retrieved successfully",
-    success: true,
-    data: result,
-  };
+  if (!result.length) {
+    return respondEmptyList<Task>(c, `No tasks found for runId ${runId}`);
+  }
 
-  return c.json(data, { status: 200 });
+  return respondOk(c, result, "Tasks retrieved successfully");
 }
 
 export async function getTask(c: Context) {
-  const result: Task[] = await db.select().from(tasks);
+  const result: Task[] = await automationService.getTasks();
 
-  const data: ApiResponse<Task[]> = {
-    message: "Tasks retrieved successfully",
-    success: true,
-    data: result,
-  };
+  if (!result.length) {
+    return respondEmptyList<Task>(c, "No tasks found");
+  }
 
-  return c.json(data, { status: 200 });
+  return respondOk(c, result, "Tasks retrieved successfully");
 }
 
 export async function getTaskByRunID(c: Context) {
-  const runId = c.req.param("runId");
+  const runId = c.req.param("runId").trim();
 
   type TTask = Task | null;
   const task: TTask = await automationService.getTaskByRunId(runId);
 
   if (!task) {
-    const data: ApiResponse<TTask> = {
-      message: `Task with runId ${runId} not found`,
-      success: false,
-      data: null,
-    };
-
-    return c.json(data, { status: 404 });
+    return respondNotFound(c, `Task with runId ${runId} not found`);
   }
-  const data: ApiResponse<TTask> = {
-    message: "Task retrieved successfully",
-    success: true,
-    data: task,
-  };
 
-  return c.json(data, { status: 200 });
+  return respondOk(c, task, "Task retrieved successfully");
 }
 
 export async function createTask(c: Context) {
@@ -97,11 +72,5 @@ export async function createTask(c: Context) {
 
   const task: TTask = await automationService.createTask(payload);
 
-  const data: ApiResponse<TTask> = {
-    message: "Task created successfully",
-    success: true,
-    data: task,
-  };
-
-  return c.json(data, { status: 200 });
+  return respondOk(c, task, "Task created successfully");
 }

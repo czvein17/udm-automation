@@ -2,6 +2,7 @@ import { drizzle } from "drizzle-orm/libsql";
 import { createClient } from "@libsql/client";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { serverLog } from "@server/util/runtimeLogger";
 
 const envUrl = process.env.LIBSQL_URL;
 
@@ -15,25 +16,14 @@ const client = createClient({
 
 export const db = drizzle(client);
 
-// Ensure tasks table exists (useful for local file DBs)
+// Keep runtime bootstrap minimal; schema is managed by drizzle migrations.
 void (async () => {
   try {
     await (client as any).execute(`PRAGMA journal_mode = WAL;`);
     await (client as any).execute(`PRAGMA busy_timeout = 5000;`);
-
-    await (client as any).execute(`
-      CREATE TABLE IF NOT EXISTS tasks (
-        id TEXT PRIMARY KEY,
-        runId TEXT NOT NULL,
-        fieldName TEXT NOT NULL
-      );
-    `);
-
-    await (client as any).execute(`DROP TABLE IF EXISTS task_logs;`);
-
-    await (client as any).execute(`DROP TABLE IF EXISTS automation_logs;`);
-    await (client as any).execute(`DROP TABLE IF EXISTS reporter_run_summaries;`);
   } catch (e) {
-    console.warn("Could not ensure tasks table exists:", e);
+    serverLog.warn("db.runtime_pragma_failed", {
+      error: e instanceof Error ? e.message : String(e),
+    });
   }
 })();

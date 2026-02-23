@@ -1,5 +1,5 @@
 import type { ZodError } from "zod";
-import type { ElementRow } from "shared/dist/schema/elements.schema";
+import type { ElementRow } from "../types/elements.types";
 
 export type RowFieldErrors = Record<
   number,
