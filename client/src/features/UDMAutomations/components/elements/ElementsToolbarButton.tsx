@@ -16,7 +16,7 @@ export function ElementsToolbarButton({
   title,
 }: ElementsToolbarButtonProps) {
   const className = label
-    ? "flex items-center justify-center gap-1 px-3 py-2 text-xs font-semibold tracking-wide duration-200 ease-in-out bg-white border rounded-lg shadow-sm text-slate-600 border-slate-200 hover:bg-slate-900 hover:text-white"
+    ? "flex items-center justify-center gap-1 whitespace-nowrap px-3 py-2 text-xs font-semibold tracking-wide duration-200 ease-in-out bg-white border rounded-lg shadow-sm text-slate-600 border-slate-200 hover:bg-slate-900 hover:text-white"
     : "p-2 text-xs transition-all duration-200 ease-in-out rounded-md shadow-sm bg-slate-200 text-slate-900 hover:bg-slate-900 hover:text-white";
 
   return (

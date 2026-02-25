@@ -10,16 +10,16 @@ export function ElementsTabFooter({
   onSubmit,
 }: ElementsTabFooterProps) {
   return (
-    <div className="flex items-center justify-between shrink-0">
+    <div className="flex shrink-0 flex-wrap items-center justify-between gap-2">
       <div className="text-xs text-slate-500">
         Rows: <span className="font-semibold text-slate-700">{rowCount}</span>
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex w-full items-center justify-end gap-2 sm:w-auto">
         <button
           type="button"
           onClick={onClear}
-          className="px-3 py-1.5 text-xs font-semibold rounded border border-slate-200 bg-white"
+          className="flex-1 rounded border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold sm:flex-none"
         >
           Clear
         </button>
@@ -27,7 +27,7 @@ export function ElementsTabFooter({
         <button
           type="button"
           onClick={onSubmit}
-          className="px-3 py-1.5 text-xs font-semibold rounded bg-wtwSecondary text-white"
+          className="flex-1 rounded bg-wtwSecondary px-3 py-1.5 text-xs font-semibold text-white sm:flex-none"
         >
           Submit
         </button>
