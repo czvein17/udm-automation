@@ -3,6 +3,7 @@ import type { Page } from "playwright-core";
 import udmSelector from "../../selectors/udm-selector";
 import type { createAutomationReporter } from "../../reporter/automationReporter";
 import { automationLog } from "../../util/runtimeLogger";
+import { ensureUnlocked } from "../../actions/udm-actions/ensureUnlocked";
 
 type AutomationReporter = ReturnType<typeof createAutomationReporter>;
 
@@ -40,4 +41,16 @@ export const editApplicabilities = async (
       { timeout: waitTimeout },
     );
   }
+
+  const unlockStatus = await ensureUnlocked(tab);
+  await reporter?.emit({
+    type: "validate",
+    details: "Edit applicabilities: unlock status",
+    payload: { unlockStatus },
+  });
+
+  automationLog.info("udm.edit_applicabilities.unlock_status", {
+    taskId: task.id,
+    unlockStatus,
+  });
 };
