@@ -12,7 +12,7 @@ Quick start:
 3) Interactive login (headful) to create profile:
    PROFILE_DIR="$HOME/.udm-automation/profile" BROWSER_HEADFUL=1 ./run.sh --job udm:copy_elements_to_another_cycle --runId local-1
 4) Offline run:
-   REPORTER_DISABLED=1 PROFILE_DIR="$HOME/.udm-automation/profile" ./run.sh --job udm:copy_elements_to_another_cycle --runId run-2
+   REPORTER_DISABLED=0 PROFILE_DIR="$HOME/.udm-automation/profile" ./run.sh --job udm:copy_elements_to_another_cycle --runId run-2
 
 Security:
  - Profile dir contains auth cookies. Do not commit it.
