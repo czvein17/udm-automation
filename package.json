@@ -21,7 +21,8 @@
     "lint": "turbo lint",
     "type-check": "turbo type-check",
     "test": "turbo test",
-    "postinstall": "turbo build --filter=shared --filter=server"
+    "postinstall": "turbo build --filter=shared --filter=server",
+    "package:windows": "powershell -NoProfile -ExecutionPolicy Bypass -File .\\scripts\\package-windows-release.ps1"
   },
   "keywords": [
     "bun",

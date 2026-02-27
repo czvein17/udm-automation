@@ -7,7 +7,10 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const repoRoot = path.resolve(__dirname, "../../");
 
-dotenv.config({ path: path.resolve(repoRoot, ".env") });
+const explicitEnvPath = (process.env.AUTOMATION_ENV_FILE ?? "").trim();
+const defaultEnvPath = path.resolve(repoRoot, ".env");
+
+dotenv.config({ path: explicitEnvPath || defaultEnvPath });
 
 // set a friendly process title so the runtime is easier to identify in process lists
 process.title = "udm-automation-worker";

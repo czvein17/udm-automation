@@ -1,4 +1,5 @@
 import fs from "node:fs";
+import path from "node:path";
 import { chromium, type Browser, type BrowserContext } from "playwright-core";
 import { resolveStatePath } from "./path";
 
@@ -7,7 +8,9 @@ export async function createBrowserWithState(): Promise<{
   context: BrowserContext;
   statePath: string;
 }> {
-  const statePath = resolveStatePath("auth.json");
+  const rawStatePath = (process.env.BROWSER_STORAGE_STATE ?? "").trim();
+  const statePath = resolveStatePath(rawStatePath || "auth.json");
+  fs.mkdirSync(path.dirname(statePath), { recursive: true });
 
   const browser = await chromium.launch({
     headless: process.env.BROWSER_HEADLESS === "true",

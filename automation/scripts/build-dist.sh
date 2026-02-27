@@ -5,8 +5,8 @@ cd "$ROOT"
 
 echo "Building dist..."
 
-# Ensure tsup is available via npx
-npx tsup src/cli.ts --format cjs --target node18 --out-dir dist --entry-names cli --external:playwright,@playwright/*
+# Bundle automation CLI for local distribution
+bun build src/cli.ts --target node --format cjs --outfile dist/cli.js --external playwright-core --external "@playwright/*"
 
 mkdir -p dist
 cp -v scripts/dist-templates/run.sh dist/run.sh

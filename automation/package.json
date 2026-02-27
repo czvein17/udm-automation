@@ -6,7 +6,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "automate": "bunx tsx src/cli.ts",
-    "typecheck": "tsc -p tsconfig.json --noEmit"
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "build:dist": "bun build src/cli.ts --target node --format cjs --outfile dist/cli.js --external playwright-core --external \"@playwright/*\""
   },
   "keywords": [],
   "author": "",

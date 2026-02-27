@@ -3,6 +3,12 @@ import { normalizeApiBaseUrl } from "../util/apiBaseUrl";
 import { automationLog } from "../util/runtimeLogger";
 
 const EVENT_POST_TIMEOUT_MS = 5000;
+const REPORTER_DISABLED_VALUES = new Set(["1", "true", "yes", "on"]);
+
+function isReporterDisabled() {
+  const value = (process.env.REPORTER_DISABLED ?? "").trim().toLowerCase();
+  return REPORTER_DISABLED_VALUES.has(value);
+}
 
 type ReporterEventInput = {
   type: AutomationEventType;
@@ -31,9 +37,14 @@ export function createAutomationReporter(options: ReporterOptions) {
   const basePayload = {
     ...(options.taskMeta ?? {}),
   };
+  const disabled = isReporterDisabled();
 
   return {
     emit: async (event: ReporterEventInput) => {
+      if (disabled) {
+        return;
+      }
+
       let timeoutHandle: ReturnType<typeof setTimeout> | undefined;
 
       try {

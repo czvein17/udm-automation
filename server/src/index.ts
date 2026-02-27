@@ -20,7 +20,10 @@ serverLog.info("server.start", {
 });
 
 const BUN_ENV = process.env.NODE_ENV || "development";
-const clientDist = path.resolve(process.cwd(), "../client/dist");
+const configuredClientDist = (process.env.CLIENT_DIST_DIR ?? "").trim();
+const clientDist = configuredClientDist
+  ? path.resolve(configuredClientDist)
+  : path.resolve(process.cwd(), "../client/dist");
 
 serverLog.info("server.config", {
   env: BUN_ENV,
