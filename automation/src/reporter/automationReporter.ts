@@ -2,6 +2,8 @@ import type { AutomationEventType } from "@shared/automation/automationEvent.con
 import { normalizeApiBaseUrl } from "../util/apiBaseUrl";
 import { automationLog } from "../util/runtimeLogger";
 
+const EVENT_POST_TIMEOUT_MS = 5000;
+
 type ReporterEventInput = {
   type: AutomationEventType;
   details: string;
@@ -32,10 +34,18 @@ export function createAutomationReporter(options: ReporterOptions) {
 
   return {
     emit: async (event: ReporterEventInput) => {
+      let timeoutHandle: ReturnType<typeof setTimeout> | undefined;
+
       try {
-        await fetch(endpoint, {
+        const controller = new AbortController();
+        timeoutHandle = setTimeout(() => {
+          controller.abort();
+        }, EVENT_POST_TIMEOUT_MS);
+
+        const response = await fetch(endpoint, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
+          signal: controller.signal,
           body: JSON.stringify({
             taskId: options.taskId,
             type: event.type,
@@ -46,6 +56,17 @@ export function createAutomationReporter(options: ReporterOptions) {
             },
           }),
         });
+
+        clearTimeout(timeoutHandle);
+
+        if (!response.ok) {
+          automationLog.warn("terminal_event.emit_http_error", {
+            runId: options.runId,
+            taskId: options.taskId,
+            type: event.type,
+            status: response.status,
+          });
+        }
       } catch (error) {
         automationLog.warn("terminal_event.emit_failed", {
           runId: options.runId,
@@ -53,6 +74,10 @@ export function createAutomationReporter(options: ReporterOptions) {
           type: event.type,
           error: error instanceof Error ? error.message : String(error),
         });
+      } finally {
+        if (timeoutHandle) {
+          clearTimeout(timeoutHandle);
+        }
       }
     },
   };

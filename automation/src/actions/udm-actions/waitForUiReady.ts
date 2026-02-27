@@ -34,3 +34,19 @@ export async function waitForElementPropertiesReady(
 
   await waitForSpinnerToSettle(page, timeout);
 }
+
+export async function waitForElementsContainerReady(
+  page: Page,
+  timeout = DEFAULT_TIMEOUT,
+) {
+  await page
+    .locator(udmSelector.elementsContainer)
+    .first()
+    .waitFor({
+      state: "visible",
+      timeout,
+    })
+    .catch(() => {});
+
+  await waitForSpinnerToSettle(page, timeout);
+}

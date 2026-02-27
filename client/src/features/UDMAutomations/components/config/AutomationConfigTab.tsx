@@ -9,6 +9,7 @@ const automationTypes = [
   "udm:re-approve",
   "udm:edit_attributes",
   "udm:edit_applicabilities",
+  "udm:copy_elements_to_another_cycle",
 ] as const;
 
 const automationTypeLabels: Record<string, string> = {
@@ -16,6 +17,7 @@ const automationTypeLabels: Record<string, string> = {
   "udm:re-approve": "Re-Approve Elements",
   "udm:edit_attributes": "Edit Attributes (Element Name)",
   "udm:edit_applicabilities": "Edit Applicabilities (Display Name)",
+  "udm:copy_elements_to_another_cycle": "Copy Elements to Another Cycle",
 };
 
 export const AutomationConfigTab = () => {

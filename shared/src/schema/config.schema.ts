@@ -18,6 +18,7 @@ export const configSchema = z.object({
       "udm:re-approve",
       "udm:edit_attributes",
       "udm:edit_applicabilities",
+      "udm:copy_elements_to_another_cycle",
     ])
     .default("udm:open_elem"),
   translation: z.string().default("English"),
