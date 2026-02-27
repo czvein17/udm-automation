@@ -136,7 +136,7 @@ export function ElementsTab() {
 
   return (
     <div className="flex flex-col h-full min-h-0 gap-2">
-      <div className="flex justify-end gap-2">
+      <div className="flex flex-wrap justify-end gap-2">
         {toolbarButtons.map((button) => (
           <ElementsToolbarButton
             key={button.id}

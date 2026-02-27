@@ -1,16 +1,34 @@
 ---
 name: coder-buddy
-description: Playbooks and rules for safe changes across BHVR monorepo (server/client/shared/automation) while preserving contracts and logs.
+description: Playbooks and rules for safe changes across BHVR monorepo (server/client/shared/automation) while preserving contracts.
 compatibility: opencode
 ---
 
 # SKILL.md
 
-UDM Automation Engineering Skill profile for AI agents.
+UDM Automation engineering skill profile tuned to this monorepo architecture.
 
 ## Goal
 
-Deliver safe, scalable changes across `automation`, `server`, `client`, and `shared` while preserving contracts and log/reporting behavior.
+Deliver safe, scalable changes across `automation`, `server`, `client`, and `shared` while preserving contracts and runtime safety.
+
+## Repo architecture map
+
+- Monorepo tooling: Bun workspaces + Turbo.
+- `shared/`: canonical Zod schemas and cross-layer types.
+- `server/`: Hono routes/handlers/services + Drizzle persistence.
+- `client/`: React + Vite + TanStack Router UI.
+- `automation/`: Node + Playwright job runner and CLI.
+
+### Key files to anchor changes
+
+- `shared/src/schema/index.ts`
+- `server/src/feature/automation/automation.route.ts`
+- `server/src/feature/config/config.route.ts`
+- `server/src/feature/task/task.route.ts`
+- `automation/src/jobs/udm-automation/index.ts`
+- `automation/src/cli.ts`
+- `client/src/features/UDMAutomations/pages/Request.tsx`
 
 ## Load order
 
@@ -26,20 +44,47 @@ Deliver safe, scalable changes across `automation`, `server`, `client`, and `sha
 4. Verify with checks from `automation-context-factory/08-verification-and-dod.md`.
 5. Report results and remaining risks.
 
+## Layer-aware playbook
+
+### Shared (`shared/`)
+
+- Define/modify cross-layer contracts in Zod first.
+- Export new schemas/types centrally from `shared/src/schema/index.ts`.
+- Prefer additive contract evolution and defaults over removals/renames.
+
+### Server (`server/`)
+
+- Keep Hono route files thin; orchestration in services/repo.
+- Validate request boundaries with Zod and fail malformed input early.
+- Preserve endpoint paths and response envelope semantics.
+
+### Client (`client/`)
+
+- Keep data-fetch/state in hooks, mapping in pure utilities, render logic in components.
+- Tolerate old/new payload variants when compatibility is required.
+- Avoid coupling display logic to automation internals.
+
+### Automation (`automation/`)
+
+- Keep CLI entrypoint at `automation/src/cli.ts` and job registration driven.
+- Centralize selectors in `automation/src/selectors`.
+- Emit explicit run/step/failure status with `runId`, `jobId`, and row/task context.
+
 ## Skill rules
 
 - Contracts-first: update `shared` schema before cross-layer behavior.
-- Compatibility-first: preserve REST/WS payload compatibility for logs.
-- Observability-first: emit structured reporter/log events for critical actions.
+- Compatibility-first: preserve active REST payload compatibility.
+- Observability-first: keep run state and failure context explicit.
 - Safety-first: avoid destructive defaults and never hardcode secrets.
 - Scalability-first: prefer additive schema evolution, bounded memory, and testable pure utilities.
 
 ## Response format expectations
 
-- Start with a short implementation summary.
-- List changed files with purpose.
-- Include verification commands run (or exact manual checks if not run).
-- Call out any unresolved risks or follow-up actions.
+- Start with a short implementation summary and intent.
+- List changed files and purpose per file.
+- Note key before/after design decisions in concise terms.
+- Include verification commands executed and outcomes (or exact manual checks if not run).
+- Call out unresolved risks, deferred follow-up actions, and rollback notes when relevant.
 
 ## Coding Skill Layer
 
@@ -50,6 +95,7 @@ Deliver safe, scalable changes across `automation`, `server`, `client`, and `sha
 - Server routes must remain thin; business logic belongs in services.
 - Automation logic must remain deterministic and side-effect aware.
 - Avoid circular dependencies across workspaces.
+- Do not allow `client`/`automation` to write directly to DB outside server APIs.
 
 ### Type Safety
 
@@ -58,16 +104,12 @@ Deliver safe, scalable changes across `automation`, `server`, `client`, and `sha
 - Update shared Zod schema before modifying cross-layer payloads.
 - Keep schema evolution additive and backward-compatible.
 
-### Logging & Observability
+### Runtime Observability
 
-- Preserve existing log lifecycle:
-  - `run_start`
-  - `row_start`
-  - `row_step`
-  - `row_end`
-- Always include `runId` and `jobId` in log context.
-- Avoid console-only debugging in production paths.
-- Structured logs > free-text logs.
+- Always include `runId` and `jobId` in failure context.
+- Avoid swallowing errors in production paths.
+- Prefer structured status payloads at API boundaries.
+- Keep run status transitions explicit and easy to trace.
 
 ### Automation Engineering
 
@@ -80,8 +122,7 @@ Deliver safe, scalable changes across `automation`, `server`, `client`, and `sha
 
 ### Performance & Scalability
 
-- Avoid unbounded arrays or log accumulation in memory.
-- Use streaming (WS) for large log flows.
+- Avoid unbounded arrays or payload accumulation in memory.
 - Prefer pure functions for mappers/parsers.
 - Avoid heavy synchronous loops inside request handlers.
 
@@ -95,7 +136,6 @@ Deliver safe, scalable changes across `automation`, `server`, `client`, and `sha
 ### Refactor Guidelines
 
 - Preserve public API surface.
-- Preserve log payload structure.
 - Maintain compatibility with existing client consumers.
 - Keep changes reversible when possible.
 
@@ -107,6 +147,21 @@ Before finishing a task:
 - [ ] Server validation updated
 - [ ] Automation caller updated
 - [ ] Client parser updated (if applicable)
-- [ ] Logs remain backward compatible
+- [ ] Runtime behavior remains coherent
 - [ ] Type-check passes
 - [ ] No duplicated logic introduced
+
+## Verification commands
+
+Run from repo root unless scope is narrower:
+
+- `bun run build`
+- `bun run type-check`
+- `bun run test`
+
+Workspace-targeted checks:
+
+- `bun run --cwd server build`
+- `bun run --cwd client lint`
+- `bun run --cwd shared build`
+- `bun run --cwd automation typecheck`

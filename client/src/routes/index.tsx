@@ -17,8 +17,8 @@ function Index() {
     },
     {
       icon: <Activity className="w-4 h-4" />,
-      title: "Live reporter stream",
-      description: "Observe run lifecycle updates as row-by-row events in real time.",
+      title: "Live run status",
+      description: "Monitor automation progress directly from the workspace.",
     },
     {
       icon: <History className="w-4 h-4" />,
@@ -42,8 +42,7 @@ function Index() {
           </h1>
           <p className="mt-4 max-w-3xl text-slate-600">
             This tool helps the team automate repetitive UDM operations, monitor
-            run behavior through reporter events, and audit historical execution
-            outcomes in a clean grouped view.
+            run behavior from one workspace, and review execution outcomes.
           </p>
 
           <div className="mt-6 flex flex-wrap gap-3">

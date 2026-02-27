@@ -1,6 +1,6 @@
 import { useCallback, useState } from "react";
 
-import { elementRowsSchema } from "shared/dist/schema/elements.schema";
+import { elementRowsSchema } from "shared";
 
 import type { ElementRow } from "@features/UDMAutomations/types/elements.types";
 import {

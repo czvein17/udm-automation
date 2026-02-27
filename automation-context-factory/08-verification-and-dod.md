@@ -10,14 +10,13 @@ From repo root:
 
 If automation changed:
 
-- `cd automation && npm run typecheck`
+- `bun run --cwd automation typecheck`
 
-If log flow changed:
+If run-state flow changed:
 
 1. Start a run.
-2. Confirm logs persist via `GET /api/v1/reporter/runs/:runId/events`.
-3. Confirm live updates via `/ws/reporter/:runId`.
-4. Confirm UI row grouping/issue rendering remains correct.
+2. Confirm run creation and status transitions are visible in API responses.
+3. Confirm affected UI pages render updated state without runtime errors.
 
 ## Done definition
 
@@ -26,8 +25,8 @@ A task is done only when all are true:
 - Shared contracts updated (or confirmed unchanged).
 - Touched layers verified by relevant commands/checks.
 - No secret leakage or unsafe hardcoding introduced.
-- Logs/reporter behavior remains coherent and observable.
-- New flow or event behavior is documented in this folder.
+- Runtime behavior remains coherent and observable.
+- New flow behavior is documented in this folder.
 
 ## Out of bounds
 

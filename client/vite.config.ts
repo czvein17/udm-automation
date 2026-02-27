@@ -9,6 +9,11 @@ export default ({ mode }: { mode: string }) => {
   const env = loadEnv(mode, path.resolve(__dirname, ".."));
   process.env = { ...process.env, ...env };
 
+  const apiProxyTarget = process.env.VITE_SERVER_URL || "http://localhost:3000";
+  const wsProxyTarget =
+    process.env.VITE_SERVER_URL ||
+    apiProxyTarget.replace(/^http:/, "ws:").replace(/^https:/, "wss:");
+
   return defineConfig({
     plugins: [
       // Please make sure that '@tanstack/router-plugin' is passed before '@vitejs/plugin-react'
@@ -36,11 +41,11 @@ export default ({ mode }: { mode: string }) => {
     server: {
       proxy: {
         "/api": {
-          target: "http://192.168.254.102:3000",
+          target: apiProxyTarget,
           changeOrigin: true,
         },
         "/ws": {
-          target: "ws://192.168.254.102/:3000",
+          target: wsProxyTarget,
           ws: true,
           changeOrigin: true,
         },

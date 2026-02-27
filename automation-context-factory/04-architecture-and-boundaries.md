@@ -2,21 +2,19 @@
 
 ## Layer map
 
-- `automation/`: Playwright jobs, CLI entrypoint, reporter/logger emission.
-- `server/`: Hono API, orchestration, log ingestion, DB persistence, WS broadcast.
-- `client/`: React UI, stream hook, display mapping, presentational logs components.
+- `automation/`: Playwright jobs and CLI entrypoint.
+- `server/`: Hono API, orchestration, and DB persistence.
+- `client/`: React UI and workflow pages.
 - `shared/`: Zod schemas and cross-layer TS types.
 
 ## Key references
 
-- `shared/src/schema/logs.schema.ts`
-- `shared/src/schema/reporter.schema.ts`
-- `automation/src/shared/reporter.ts`
-- `automation/src/shared/logger.ts`
-- `server/src/feature/logs/logs.routes.ts`
-- `server/src/feature/logs/logs.parser.ts`
-- `client/src/features/UDMAutomations/hooks/useLogsStream.ts`
-- `client/src/features/UDMAutomations/utils/LogsTerminal.mapper.ts`
+- `shared/src/schema/index.ts`
+- `server/src/feature/automation/automation.route.ts`
+- `server/src/feature/config/config.route.ts`
+- `server/src/feature/task/task.route.ts`
+- `automation/src/jobs/udm-automation/index.ts`
+- `client/src/features/UDMAutomations/pages/Request.tsx`
 
 ## Boundary rules
 

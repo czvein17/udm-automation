@@ -1,0 +1,229 @@
+@layer components {
+  .automation-terminal-shell {
+    @apply h-full min-h-0 flex flex-col rounded-lg border overflow-hidden;
+    border-color: color-mix(in srgb, var(--color-wtwSecondary) 24%, #334155);
+    background: linear-gradient(180deg, #0f172a 0%, #111827 100%);
+    color: #e2e8f0;
+  }
+
+  .terminal-topbar {
+    @apply px-3 py-2 border-b flex flex-wrap items-start justify-between gap-2 lg:flex-nowrap lg:items-center;
+    border-color: color-mix(in srgb, var(--color-wtwSecondary) 26%, #334155);
+    background: color-mix(in srgb, var(--color-wtwPrimary) 16%, #0b1220);
+  }
+
+  .terminal-topbar-left,
+  .terminal-topbar-right {
+    @apply flex max-w-full flex-wrap items-center gap-2 sm:flex-nowrap;
+  }
+
+  .terminal-run-id {
+    @apply max-w-full break-all font-mono text-xs lg:break-normal;
+    color: #dbeafe;
+  }
+
+  .terminal-status {
+    @apply inline-flex items-center px-2 py-0.5 text-[11px] rounded-full border;
+    border-color: transparent;
+  }
+
+  .terminal-status-success {
+    @apply bg-emerald-500/20 text-emerald-300 border-emerald-500/30;
+  }
+
+  .terminal-status-error {
+    @apply bg-rose-500/20 text-rose-300 border-rose-500/30;
+  }
+
+  .terminal-status-running {
+    @apply bg-amber-500/20 text-amber-300 border-amber-500/30;
+  }
+
+  .terminal-status-paused {
+    @apply bg-sky-500/20 text-sky-300 border-sky-500/30;
+  }
+
+  .terminal-ws {
+    @apply inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded border;
+  }
+
+  .terminal-ws-up {
+    @apply text-emerald-300 bg-emerald-500/10 border-emerald-500/30;
+  }
+
+  .terminal-ws-down {
+    @apply text-rose-300 bg-rose-500/10 border-rose-500/30;
+  }
+
+  .terminal-counter {
+    @apply text-[11px] px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700;
+  }
+
+  .terminal-actions-row {
+    @apply px-3 py-2 border-b flex flex-wrap items-center gap-2 sm:flex-nowrap;
+    border-color: color-mix(in srgb, var(--color-wtwSecondary) 22%, #334155);
+    background: color-mix(in srgb, #0f172a 80%, black);
+  }
+
+  .terminal-history-toggle,
+  .terminal-load-older,
+  .terminal-show-more {
+    @apply text-[11px] px-2 py-1 rounded border;
+    border-color: color-mix(in srgb, var(--color-wtwSecondary) 35%, #334155);
+    color: #cbd5e1;
+    background: color-mix(in srgb, var(--color-wtwPrimary) 10%, #0f172a);
+  }
+
+  .terminal-history-toggle:hover,
+  .terminal-load-older:hover,
+  .terminal-show-more:hover {
+    background: color-mix(in srgb, var(--color-wtwSecondary) 18%, #0f172a);
+  }
+
+  .terminal-show-more-corner {
+    @apply absolute left-2 bottom-2;
+  }
+
+  .terminal-load-older:disabled {
+    @apply opacity-60 cursor-not-allowed;
+  }
+
+  .automation-terminal-scroll {
+    @apply flex-1 min-h-0 overflow-auto px-2 py-2;
+    scrollbar-width: thin;
+    scrollbar-color: #64748b #0f172a;
+  }
+
+  .automation-terminal-scroll::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  .automation-terminal-scroll::-webkit-scrollbar-track {
+    background: #0f172a;
+    border-radius: 9999px;
+  }
+
+  .automation-terminal-scroll::-webkit-scrollbar-thumb {
+    background: #64748b;
+    border-radius: 9999px;
+    border: 2px solid #0f172a;
+  }
+
+  .automation-terminal-scroll::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+  }
+
+  .terminal-card-list {
+    @apply flex flex-col gap-2;
+  }
+
+  .terminal-task-card {
+    @apply border rounded p-2 relative;
+    border-color: color-mix(in srgb, var(--color-wtwSecondary) 24%, #334155);
+    background: color-mix(in srgb, var(--color-wtwPrimary) 12%, #0f172a);
+  }
+
+  .terminal-task-card-with-toggle {
+    @apply pb-9;
+  }
+
+  .terminal-task-meta-top {
+    @apply absolute top-2 right-2 flex items-center gap-1;
+  }
+
+  .terminal-task-row-label {
+    @apply text-[11px] font-mono;
+    color: #94a3b8;
+  }
+
+  .terminal-task-status-chip {
+    @apply inline-flex items-center px-2 py-0.5 text-[10px] rounded-full border font-semibold tracking-wide;
+  }
+
+  .terminal-task-status-chip-ok {
+    @apply bg-emerald-500/20 text-emerald-300 border-emerald-500/30;
+  }
+
+  .terminal-task-status-chip-running {
+    @apply bg-amber-500/20 text-amber-300 border-amber-500/30;
+  }
+
+  .terminal-task-status-chip-fail {
+    @apply bg-rose-500/20 text-rose-300 border-rose-500/30;
+  }
+
+  .terminal-task-header {
+    @apply mb-2 space-y-0.5;
+  }
+
+  .terminal-task-meta-row {
+    @apply text-[11px];
+  }
+
+  .terminal-task-meta-label {
+    @apply uppercase tracking-wide font-mono text-sky-500;
+  }
+
+  .terminal-task-meta-value {
+    @apply text-white font-mono;
+  }
+
+  .terminal-task-meta-link {
+    @apply font-mono underline underline-offset-2;
+    color: #93c5fd;
+    word-break: break-all;
+  }
+
+  .terminal-task-meta-link:hover {
+    color: #bfdbfe;
+  }
+
+  .terminal-event-list {
+    @apply list-none ml-0 pl-0 space-y-0.5;
+  }
+
+  .terminal-event-line {
+    @apply flex items-start gap-1.5 text-[11px] leading-5;
+    font-family:
+      ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
+      "Courier New", monospace;
+  }
+
+  .terminal-event-chevron {
+    @apply mt-1;
+    color: #fbbf24;
+  }
+
+  .terminal-event-seq {
+    @apply text-red-300;
+  }
+
+  .terminal-event-type {
+    @apply uppercase text-[10px] tracking-wide rounded px-1;
+  }
+
+  .terminal-event-type-navigate,
+  .terminal-event-type-click,
+  .terminal-event-type-fill,
+  .terminal-event-type-validate,
+  .terminal-event-type-edited {
+    @apply text-sky-300 bg-sky-500/10;
+  }
+
+  .terminal-event-type-success {
+    @apply text-emerald-300 bg-emerald-500/10;
+  }
+
+  .terminal-event-type-error {
+    @apply text-rose-300 bg-rose-500/10;
+  }
+
+  .terminal-event-text {
+    @apply text-amber-300;
+  }
+
+  .terminal-empty-events {
+    @apply text-[11px] text-slate-400;
+  }
+}

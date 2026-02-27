@@ -8,5 +8,11 @@ export {
   ElementsToolbarButton,
   TableHeader,
 } from "./elements";
-export { LogsTerminal } from "./logs";
+export {
+  AutomationEventList,
+  AutomationStatusBadge,
+  AutomationTaskCard,
+  AutomationTaskHeader,
+  AutomationTerminalTopBar,
+} from "./logs";
 export { AutomationOverviewBar, StatusChip } from "./overview";

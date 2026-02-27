@@ -14,7 +14,9 @@ import {
 import { StatusChip } from "./StatusChip";
 
 export function AutomationOverviewBar() {
-  const { activeTab } = useAutomationSessionStore(useShallow(selectSessionTabSlice));
+  const { activeTab } = useAutomationSessionStore(
+    useShallow(selectSessionTabSlice),
+  );
   const { currentRunId, setCurrentRunId } = useAutomationSessionStore(
     useShallow(selectSessionRunIdSlice),
   );

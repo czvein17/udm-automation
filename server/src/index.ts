@@ -2,23 +2,30 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
 import { createBunWebSocket, serveStatic } from "hono/bun";
-import type { ApiResponse } from "shared/dist";
+import type { ApiResponse } from "shared";
 import path from "node:path";
 import { appRouter } from "./app/router";
 import { errorMiddleware } from "./middleware/errorHandler";
+import { serverLog } from "./util/runtimeLogger";
 import {
-  connectReporterRoom,
-  disconnectReporterRoom,
-} from "./feature/logs/logs.ws";
-export type { LogEvent, LogLevel } from "./feature/logs/logs.schema";
+  onAutomationTerminalSocketClose,
+  onAutomationTerminalSocketMessage,
+  onAutomationTerminalSocketOpen,
+} from "./feature/automationTerminal";
 
 process.title = "bhvr-api-dev";
-console.log(`🚀 ${process.title} running (PID: ${process.pid})`);
+serverLog.info("server.start", {
+  processTitle: process.title,
+  pid: process.pid,
+});
 
 const BUN_ENV = process.env.NODE_ENV || "development";
 const clientDist = path.resolve(process.cwd(), "../client/dist");
 
-console.log(process.env.DB_FILE_NAME);
+serverLog.info("server.config", {
+  env: BUN_ENV,
+  dbFileName: process.env.DB_FILE_NAME ?? "<unset>",
+});
 
 const app = new Hono();
 const { upgradeWebSocket, websocket } = createBunWebSocket();
@@ -41,20 +48,22 @@ api.get("/hello", async (c) => {
   return c.json(data, { status: 200 });
 });
 
-const reporterWebSocketHandler = upgradeWebSocket((c) => {
-  const runId = c.req.param("runId");
-
-  return {
-    onOpen: async (_event, ws) => {
-      await connectReporterRoom(runId, ws);
-    },
-    onClose: (_event, ws) => {
-      disconnectReporterRoom(runId, ws);
-    },
-  };
-});
-
-app.get("/ws/reporter/:runId", reporterWebSocketHandler);
+app.get(
+  "/ws/automation-terminal",
+  upgradeWebSocket(() => {
+    return {
+      onOpen: (_event, ws) => {
+        onAutomationTerminalSocketOpen(ws);
+      },
+      onClose: (_event, ws) => {
+        onAutomationTerminalSocketClose(ws);
+      },
+      onMessage: async (event, ws) => {
+        await onAutomationTerminalSocketMessage(ws, event.data);
+      },
+    };
+  }),
+);
 
 app.use("/*", serveStatic({ root: clientDist }));
 app.get("*", serveStatic({ path: path.join(clientDist, "index.html") }));

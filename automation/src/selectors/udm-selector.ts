@@ -27,4 +27,25 @@ export default {
   attrFieldNameInput: "#field-name",
 
   spinner: ".ngx-spinner-overlay",
+
+  elementsContainer:
+    "#axis-main-content > ss-app > div > div > ss-elements > div",
+
+  elementsGrid:
+    "#survey-cycle-organization-grid > div.ag-root-wrapper.ag-layout-normal.ag-ltr",
+
+  elementsGridIncumbent:
+    "#survey-cycle-incumbent-grid > div.ag-root-wrapper.ag-layout-normal.ag-ltr",
+
+  elementsGridFallback:
+    "#axis-main-content > ss-app > div > div > ss-elements > div .ag-root-wrapper.ag-layout-normal.ag-ltr",
+
+  elementsGridFilterInput:
+    'input[data-ref="eInput"][aria-label="Field / Element Name Filter Input"]',
+
+  elementsGridRowViewport: ".ag-center-cols-viewport",
+  elementsGridRow: ".ag-center-cols-container .ag-row",
+  elementsGridFirstColumn: '[col-id="elementName"]',
+  elementsGridFirstColumnFieldName: '[col-id="elementName"] strong',
+  elementsGridFirstColumnElementName: '[col-id="elementName"] small',
 };

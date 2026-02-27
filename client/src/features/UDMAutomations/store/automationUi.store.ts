@@ -28,7 +28,16 @@ export const useAutomationSessionStore = create<AutomationSessionState>()(
       activeTab: "Elements",
       currentRunId: "",
       setActiveTab: (tab) => set({ activeTab: tab }),
-      setCurrentRunId: (runId) => set({ currentRunId: runId }),
+      setCurrentRunId: (runId) => {
+        const normalized = runId.trim();
+        set((state) =>
+          state.currentRunId === normalized
+            ? state
+            : {
+                currentRunId: normalized,
+              },
+        );
+      },
     }),
     {
       name: "udm-automation-session",

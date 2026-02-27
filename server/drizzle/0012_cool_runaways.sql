@@ -1,4 +1,4 @@
-CREATE TABLE `reporter_run_summaries` (
+CREATE TABLE IF NOT EXISTS `reporter_run_summaries` (
 	`runId` text PRIMARY KEY NOT NULL,
 	`jobId` text,
 	`runnerId` text,
@@ -12,5 +12,5 @@ CREATE TABLE `reporter_run_summaries` (
 	`lastSeq` integer DEFAULT 0 NOT NULL
 );
 --> statement-breakpoint
-CREATE INDEX `idx_reporter_run_summaries_last_seq` ON `reporter_run_summaries` (`lastSeq`);--> statement-breakpoint
-CREATE INDEX `idx_reporter_run_summaries_last_ts` ON `reporter_run_summaries` (`lastTs`);
+CREATE INDEX IF NOT EXISTS `idx_reporter_run_summaries_last_seq` ON `reporter_run_summaries` (`lastSeq`);--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS `idx_reporter_run_summaries_last_ts` ON `reporter_run_summaries` (`lastTs`);

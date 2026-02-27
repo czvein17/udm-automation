@@ -1,5 +1,6 @@
 import type { Page } from "playwright-core";
 import udmSelector from "../../selectors/udm-selector";
+import { waitForSpinnerToSettle } from "./waitForUiReady";
 
 function normalizeLanguageName(value: string) {
   return value
@@ -23,29 +24,41 @@ export const selectLanguage = async (tab: Page, lng: string) => {
   const timeout = 30000;
   const candidates = languageCandidates(lng);
 
+  await tab.bringToFront();
+
   // ✅ ensure app is hydrated
   await tab.waitForSelector("app-root", { timeout });
 
   const toggle = tab.locator(udmSelector.lng_sel).first();
-  await toggle.waitFor({ state: "visible", timeout });
-  await toggle.click();
-
   const list = tab.locator(udmSelector.lng_list_sel).first();
-  await list.waitFor({ state: "visible", timeout });
+  const simplified = lng.replace(/\s*\(.*\)/, "").trim();
+  let selected = false;
 
-  const option = list.locator(`li:has-text("${lng}")`).first();
-  if (await option.isVisible().catch(() => false)) {
-    await option.click();
-  } else {
-    const simplified = lng.replace(/\s*\(.*\)/, "").trim();
+  for (let attempt = 1; attempt <= 2; attempt += 1) {
+    await toggle.waitFor({ state: "visible", timeout });
+    await toggle.click();
+    await list.waitFor({ state: "visible", timeout });
+
+    const option = list.locator(`li:has-text("${lng}")`).first();
+    if (await option.isVisible().catch(() => false)) {
+      await option.click();
+      selected = true;
+      break;
+    }
+
     const fallback = list.locator(`li:has-text("${simplified}")`).first();
-
     if (await fallback.isVisible().catch(() => false)) {
       await fallback.click();
-    } else {
-      await tab.keyboard.press("Escape").catch(() => {});
-      throw new Error(`selectLanguage: option not found for "${lng}"`);
+      selected = true;
+      break;
     }
+
+    await toggle.click().catch(() => {});
+    await waitForSpinnerToSettle(tab, 2000);
+  }
+
+  if (!selected) {
+    throw new Error(`selectLanguage: option not found for "${lng}"`);
   }
 
   // best-effort overlay wait
@@ -78,7 +91,5 @@ export const selectLanguage = async (tab: Page, lng: string) => {
   );
 
   // best-effort wait for spinner to settle after language switch
-  await tab
-    .waitForSelector(udmSelector.spinner, { state: "hidden", timeout: 5000 })
-    .catch(() => {});
+  await waitForSpinnerToSettle(tab, 5000);
 };

@@ -2,51 +2,52 @@ import type { Page } from "playwright-core";
 import { getElementStatus } from "../../actions/udm-actions/checkElementStatus";
 import { ensureUnlocked } from "../../actions/udm-actions/ensureUnlocked";
 import { toggleApprove } from "../../actions/udm-actions/toggleApprove";
-import type { RowReporter } from "../../shared/reporter";
+import { waitForElementPropertiesReady } from "../../actions/udm-actions/waitForUiReady";
+import type { createAutomationReporter } from "../../reporter/automationReporter";
+import { automationLog } from "../../util/runtimeLogger";
 
-export const reApprove = async (tab: Page, row: RowReporter) => {
-  await tab.waitForTimeout(1000);
+type AutomationReporter = ReturnType<typeof createAutomationReporter>;
 
+export const reApprove = async (tab: Page, reporter?: AutomationReporter) => {
   // ensure this page has focus before interacting (concurrent pages may steal focus)
-  await row.step("Re-approve: focus tab", {
-    action: "bring to front",
-  });
-
   await tab.bringToFront();
-
-  await row.step("Re-approve: unlock check", {
-    action: "ensure unlocked",
+  await waitForElementPropertiesReady(tab, 10000);
+  await reporter?.emit({
+    type: "click",
+    details: "Re-approve: bring tab to front",
   });
 
   const unlockStatus = await ensureUnlocked(tab);
-
-  await row.step("Re-approve: unlock status", {
-    status: unlockStatus ?? "unknown",
+  await reporter?.emit({
+    type: "validate",
+    details: "Re-approve: unlock status",
+    payload: { unlockStatus },
   });
-
-  await row.step("Re-approve: wait", { delayMs: 500 });
-  await tab.waitForTimeout(500);
+  automationLog.info("udm.reapprove.unlock_status", {
+    unlockStatus: unlockStatus ?? "unknown",
+  });
 
   // make sure the tab is focused again before keyboard/click actions
-  await row.step("Re-approve: refocus tab", {
-    action: "bring to front",
-  });
   await tab.bringToFront();
 
-  await row.step("Re-approve: click approve", {
-    action: "toggle approve",
-  });
-
   const approved = await toggleApprove(tab);
-
-  await row.step("Re-approve: approve result", {
-    success: approved === true ? "yes" : "no",
+  await reporter?.emit({
+    type: "click",
+    details: "Re-approve: toggle approve",
+    payload: { approved: approved === true },
+  });
+  automationLog.info("udm.reapprove.approve_result", {
+    approved: approved === true,
   });
 
   const statusAfterToggle = await getElementStatus(tab);
-
-  await row.step("Re-approve: status after toggle", {
-    status: statusAfterToggle,
+  await reporter?.emit({
+    type: statusAfterToggle === "approved" ? "success" : "error",
+    details: "Re-approve: status after toggle",
+    payload: { statusAfterToggle },
+  });
+  automationLog.info("udm.reapprove.status_after_toggle", {
+    statusAfterToggle,
   });
 
   if (!approved || statusAfterToggle !== "approved") {

@@ -2,5 +2,4 @@
 @import "./base.css";
 @import "./components/core.css";
 @import "./components/automation.css";
-@import "./components/logs-terminal.css";
-@import "./components/history.css";
+@import "./components/automation-terminal.css";

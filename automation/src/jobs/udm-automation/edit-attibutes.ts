@@ -1,52 +1,61 @@
 import type { Page } from "playwright-core";
+import type { Task } from "@shared/schema/task.schema";
 import { ensureUnlocked } from "../../actions/udm-actions/ensureUnlocked";
 import udmSelector from "../../selectors/udm-selector";
-import type { Task } from "@server/db/schema";
 import { toggleSave } from "../../actions/udm-actions/toggleSaveBtn";
-import type { RowReporter } from "../../shared/reporter";
+import { waitForElementPropertiesReady } from "../../actions/udm-actions/waitForUiReady";
+import type { createAutomationReporter } from "../../reporter/automationReporter";
+import { automationLog } from "../../util/runtimeLogger";
+
+type AutomationReporter = ReturnType<typeof createAutomationReporter>;
 
 export const editAttributes = async (
   page: Page,
   task: Task,
-  row: RowReporter,
+  reporter?: AutomationReporter,
 ) => {
-  console.log("Attempting to unlcok");
-  await row.step("Edit attributes: unlock check", {
-    action: "ensure unlocked",
+  automationLog.info("udm.edit_attributes.unlock_start", {
+    taskId: task.id,
+  });
+  await reporter?.emit({
+    type: "validate",
+    details: "Edit attributes: ensure unlocked",
   });
 
-  const delayMs = 3000;
-
-  if (delayMs > 0) {
-    console.log(`Waiting ${delayMs}ms for UI to settle...`);
-    await row.step("Edit attributes: wait for settle", {
-      delayMs,
-    });
-    await new Promise((r) => setTimeout(r, delayMs));
-  }
+  await waitForElementPropertiesReady(page, 10000);
 
   const unlockStatus = await ensureUnlocked(page);
-
-  await row.step("Edit attributes: unlock status", {
-    status: unlockStatus ?? "unknown",
+  await reporter?.emit({
+    type: "validate",
+    details: "Edit attributes: unlock status",
+    payload: { unlockStatus },
   });
 
-  console.log(unlockStatus);
+  automationLog.info("udm.edit_attributes.unlock_status", {
+    taskId: task.id,
+    unlockStatus,
+  });
 
   const elemNameSel = udmSelector.attrElemNameInput;
   const displayName = task.displayName;
 
-  await row.step("Edit display name", { value: displayName });
+  await page.locator(elemNameSel).first().waitFor({ state: "visible", timeout: 10000 });
 
   await page.fill(elemNameSel, displayName!);
-
-  await row.step("Edit attributes: save", {
-    action: "toggle save",
+  await reporter?.emit({
+    type: "fill",
+    details: "Edit attributes: filled display name",
+    payload: { displayName },
   });
 
   const saveResult = await toggleSave(page);
-
-  await row.step("Edit attributes: save result", {
-    success: saveResult === true ? "yes" : "no",
+  await reporter?.emit({
+    type: saveResult ? "success" : "error",
+    details: "Edit attributes: save result",
+    payload: { saveResult: saveResult === true },
+  });
+  automationLog.info("udm.edit_attributes.save_result", {
+    taskId: task.id,
+    saveResult: saveResult === true,
   });
 };

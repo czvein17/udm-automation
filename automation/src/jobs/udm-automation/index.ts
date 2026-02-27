@@ -1,47 +1,25 @@
 import { createBrowserWithState } from "../../shared/browserWithProfile";
 import { ensureLoggedIn } from "../../shared/auth";
-import { makeLogger } from "../../shared/logger";
-import { createReporter } from "../../shared/reporter";
 
-import { getConfigForService } from "@server/feature/config/config.service";
+import { getConfigFor } from "../../services/automationApi";
+import { automationLog } from "../../util/runtimeLogger";
 import { startAutomation } from "./start-automation";
 
 export async function runUdmAutomation(runId: string) {
-  const configSettin = await getConfigForService("udm");
+  const configSetting = await getConfigFor("udm");
 
-  if (!configSettin) {
-    throw new Error("UDM config not found");
-  }
-
-  const { baseUrl, surveyline } = configSettin;
+  const { baseUrl, surveyline } = configSetting;
 
   if (!baseUrl) {
     throw new Error("UDM config baseUrl not found");
   }
 
-  const runnerId = `pid-${process.pid}`;
-
-  const report = createReporter({
-    runId,
-    jobId: "udm-automation",
-    runnerId,
-    config: {
-      surveyline: configSettin.surveyline ?? undefined,
-      automationType: configSettin.automationType,
-      translation: configSettin.translation ?? undefined,
-    },
-  });
-
-  const logger = makeLogger({
-    runId,
-    jobId: "udm-automation",
-    runnerId,
-    surveyline: configSettin.surveyline ?? undefined,
-    automationType: configSettin.automationType,
-    translation: configSettin.translation,
-  });
-
-  await report.runStart();
+  const logger = {
+    info: (event: string, context?: Record<string, unknown>) =>
+      automationLog.info(event, context),
+    error: (event: string, context?: Record<string, unknown>) =>
+      automationLog.error(event, context),
+  };
 
   const { browser, context, statePath } = await createBrowserWithState();
   const page = await context.newPage();
@@ -49,12 +27,12 @@ export async function runUdmAutomation(runId: string) {
   try {
     await ensureLoggedIn({ page, context, baseUrl, statePath, logger });
 
-    await startAutomation(configSettin, runId, context, report);
+    await startAutomation(configSetting, runId, context);
 
     // save updated cookies at end too
     await context.storageState({ path: statePath });
   } catch (err) {
-    await logger.error("run_error", { err: String(err) });
+    logger.error("run.error", { error: String(err), runId });
     throw err;
   }
 }

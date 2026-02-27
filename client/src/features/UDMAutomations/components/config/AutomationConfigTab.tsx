@@ -9,6 +9,7 @@ const automationTypes = [
   "udm:re-approve",
   "udm:edit_attributes",
   "udm:edit_applicabilities",
+  "udm:copy_elements_to_another_cycle",
 ] as const;
 
 const automationTypeLabels: Record<string, string> = {
@@ -16,6 +17,7 @@ const automationTypeLabels: Record<string, string> = {
   "udm:re-approve": "Re-Approve Elements",
   "udm:edit_attributes": "Edit Attributes (Element Name)",
   "udm:edit_applicabilities": "Edit Applicabilities (Display Name)",
+  "udm:copy_elements_to_another_cycle": "Copy Elements to Another Cycle",
 };
 
 export const AutomationConfigTab = () => {
@@ -135,14 +137,14 @@ export const AutomationConfigTab = () => {
 
   return (
     <div className="h-full min-h-0 p-3">
-      <div className="flex items-center gap-3 mb-3">
+      <div className="mb-3 flex flex-wrap items-center gap-2 sm:gap-3">
         <label className="text-xs text-slate-600">Config for</label>
         <select
           id="configFor"
           name="configFor"
           value={configFor}
           onChange={(e) => setConfigFor(e.target.value)}
-          className="form-input"
+          className="form-input w-full sm:w-auto"
         >
           {configForValues.map((v) => (
             <option key={v} value={v}>
@@ -159,7 +161,7 @@ export const AutomationConfigTab = () => {
           {isLoading ? "Loading..." : "Load"}
         </button>
 
-        <div className="ml-auto text-xs text-slate-500">
+        <div className="w-full text-xs text-slate-500 sm:ml-auto sm:w-auto">
           Current:{" "}
           <span className="font-semibold text-slate-700">{configFor}</span>
         </div>
