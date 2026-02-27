@@ -1,0 +1,6 @@
+app/client/
+app/server/
+app/automation/
+app/templates/
+runtime/
+*.zip

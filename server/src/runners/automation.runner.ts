@@ -11,6 +11,20 @@ async function setTerminalRunStatus(runId: string, status: "SUCCESS" | "ERROR") 
   broadcastAutomationTerminalState(runId);
 }
 
+function quote(value: string) {
+  return `"${value.replaceAll('"', '\\"')}"`;
+}
+
+function buildReleaseCommand(args: { jobId: string; runId: string }) {
+  const cliPath = (process.env.AUTOMATION_CLI_PATH ?? "").trim();
+  if (!cliPath) {
+    return null;
+  }
+
+  const nodePath = (process.env.NODE_RUNTIME_PATH ?? "node").trim() || "node";
+  return `${quote(nodePath)} ${quote(cliPath)} ${args.jobId} ${args.runId}`;
+}
+
 export function runAutomationJob(args: { runId: string; jobId: string }) {
   // resolve repo root relative to this file (robust regardless of process.cwd)
   const __filename = fileURLToPath(import.meta.url);
@@ -19,6 +33,55 @@ export function runAutomationJob(args: { runId: string; jobId: string }) {
 
   const { runId, jobId } = args;
   serverLog.info("automation.job.spawn", { runId, jobId });
+
+  const releaseCommand = buildReleaseCommand(args);
+  if (releaseCommand) {
+    const releaseChild = spawn(releaseCommand, {
+      cwd: repoRoot,
+      env: { ...process.env },
+      stdio: ["ignore", "inherit", "inherit"],
+      windowsHide: true,
+      shell: true,
+    });
+
+    releaseChild.on("close", (code) => {
+      const ok = code === 0;
+      serverLog.info("automation.job.exit", {
+        runId,
+        jobId,
+        exitCode: code ?? -1,
+        ok,
+        mode: "release",
+      });
+      void setTerminalRunStatus(runId, ok ? "SUCCESS" : "ERROR");
+      finishRun(runId, {
+        status: ok ? "SUCCESS" : "FAILED",
+        finishedAt: new Date().toISOString(),
+        exitCode: code ?? -1,
+        error: ok ? undefined : `Exit code ${code ?? -1}`,
+      });
+    });
+
+    releaseChild.on("error", (err: Error & { code?: string }) => {
+      serverLog.error("automation.job.spawn_error", {
+        runId,
+        jobId,
+        error: err.message,
+        code: err.code,
+        mode: "release",
+      });
+
+      void setTerminalRunStatus(runId, "ERROR");
+      finishRun(runId, {
+        status: "FAILED",
+        finishedAt: new Date().toISOString(),
+        exitCode: -1,
+        error: err.message,
+      });
+    });
+
+    return;
+  }
 
   // run via shell so "bunx" (or npm scripts) can be resolved on Windows
   const child = spawn(`bunx tsx automation/src/cli.ts ${jobId} ${runId}`, {
