@@ -213,7 +213,7 @@ $mergedEnv["NODE_RUNTIME_PATH"] = $nodeExe
 $mergedEnv["AUTOMATION_STATE_DIR"] = $localStateDir
 $mergedEnv["BROWSER_STORAGE_STATE"] = (Join-Path $localStateDir "auth.json")
 $mergedEnv["NODE_PATH"] = (Join-Path $localDepsDir "node_modules")
-$mergedEnv["REPORTER_DISABLED"] = "1"
+$mergedEnv["REPORTER_DISABLED"] = "0"
 
 Write-EnvFile -Path $localEnvPath -Data $mergedEnv
 
